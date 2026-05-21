@@ -3591,6 +3591,46 @@ function PartsManager({parts,onPartsChange}){
     a.download='ST_'+((selPart&&selPart.name)||'part')+'_'+new Date().toISOString().slice(0,10)+'.csv';
     a.click();
   }
+  function exportPartsDb(){
+    var data={version:1,exportedAt:new Date().toISOString(),parts:parts,partSt:partSt,partReset:partReset};
+    var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='PIE_parts_'+new Date().toISOString().slice(0,10)+'.pie';a.click();
+  }
+  function importPartsDb(){
+    var input=document.createElement('input');input.type='file';input.accept='.pie,.json';
+    input.onchange=function(e){
+      var file=e.target.files[0];if(!file)return;
+      var reader=new FileReader();
+      reader.onload=function(ev){
+        try{
+          var data=JSON.parse(ev.target.result);
+          if(!Array.isArray(data.parts)){alert('유효하지 않은 파일입니다.');return;}
+          var mode=confirm('기존 부품 데이터를 어떻게 처리할까요?\n\n확인 = 교체 (기존 삭제 후 가져오기)\n취소 = 병합 (기존 유지 + 새 항목 추가)');
+          var nextParts;
+          if(mode){
+            nextParts=data.parts;
+          } else {
+            var existNames=parts.map(function(p){return (p.name||'').toLowerCase();});
+            var newOnes=data.parts.filter(function(p){return !existNames.includes((p.name||'').toLowerCase());});
+            nextParts=parts.concat(newOnes);
+          }
+          partsSave(nextParts);onPartsChange(nextParts);
+          if(data.partSt){
+            var nextSt=mode?data.partSt:Object.assign({},data.partSt,partSt);
+            partStSave(nextSt);setPartSt(nextSt);
+          }
+          if(data.partReset){
+            var nextReset=mode?data.partReset:Object.assign({},data.partReset,partReset);
+            partResetSave(nextReset);setPartReset(nextReset);
+          }
+          alert('가져오기 완료: 부품 '+nextParts.length+'개');
+        }catch(err){alert('파일 오류: '+err.message);}
+      };
+      reader.readAsText(file,'utf-8');
+    };
+    input.click();
+  }
   function stCalc(durs){
     var n=durs.length;
     if(!n) return{n:0,avg:0,min:0,max:0,std:0};
@@ -3615,7 +3655,11 @@ function PartsManager({parts,onPartsChange}){
     // header
     React.createElement('div',{style:HDR},
       React.createElement('span',{style:{fontSize:14,fontWeight:700,color:'#fff'}},'🔧 부품 마스터 관리'),
-      React.createElement('button',{className:'btn btn-blue',style:{fontSize:12},onClick:startAdd},'+ 부품 추가'),
+      React.createElement('div',{style:{display:'flex',gap:6}},
+        React.createElement('button',{className:'btn btn-slate',style:{fontSize:11},onClick:importPartsDb},'📥 가져오기'),
+        React.createElement('button',{className:'btn btn-slate',style:{fontSize:11},onClick:exportPartsDb},'📤 내보내기'),
+        React.createElement('button',{className:'btn btn-blue',style:{fontSize:12},onClick:startAdd},'+ 부품 추가'),
+      ),
     ),
     // add/edit form
     showForm&&React.createElement('div',{style:{padding:'10px 16px',background:'#1e293b',borderBottom:'1px solid #334155',flexShrink:0}},
