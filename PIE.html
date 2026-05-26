@@ -1594,7 +1594,7 @@ function ProjectMenuDropdown({lang,onNew,onLoad,onSettings,onClose,onSave,
   );
 }
 
-function LeftSidebar({tab,setTab,lang,beginnerMode,onCompare,videoCount}){
+function LeftSidebar({tab,setTab,lang,beginnerMode,onCompare}){
   var _c=useState(false); var collapsed=_c[0],setCollapsed=_c[1];
   var s=STRINGS[lang]||STRINGS.ko;
   var ANALYSIS_ITEMS=[
