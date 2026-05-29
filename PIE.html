@@ -883,7 +883,6 @@ input[type=range] { accent-color:#3b82f6; }
 .tab-scroll-hide { scrollbar-width: none; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -4133,6 +4132,1625 @@ function LinePredict({parts}){
     ),
   );
 }
+
+
+// ─────────────────────────────────────────
+//  App
+// ─────────────────────────────────────────
+// Error boundary for debugging
+class ErrorBoundary extends React.Component{
+  constructor(p){super(p);this.state={err:null};}
+  static getDerivedStateFromError(e){return{err:e};}
+  render(){
+    if(this.state.err)return React.createElement('div',{style:{color:'#f87171',padding:24,fontFamily:'monospace',background:'#0f172a',minHeight:'100vh'}},
+      React.createElement('h2',{style:{marginBottom:8}},'React Render Error'),
+      React.createElement('p',{style:{marginBottom:8}},this.state.err.message),
+      React.createElement('pre',{style:{fontSize:11,whiteSpace:'pre-wrap'}},this.state.err.stack)
+    );
+    return this.props.children;
+  }
+}
+
+// ─────────────────────────────────────────
+//  SOP Export Modal
+// ─────────────────────────────────────────
+
+// ── Tip: hover tooltip ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+function Tip(props){
+  var [show,setShow]=React.useState(false);
+  return React.createElement('span',{
+    style:{position:'relative',display:'inline-flex',alignItems:'center',cursor:'help'},
+    onMouseEnter:function(){setShow(true);},
+    onMouseLeave:function(){setShow(false);},
+  },
+    React.createElement('span',{style:{color:props.color||'#94a3b8',fontWeight:600,borderBottom:'1px dotted '+(props.color||'#94a3b8')}},props.label),
+    show&&React.createElement('span',{
+      style:{
+        position:'absolute',bottom:'calc(100% + 6px)',left:'50%',transform:'translateX(-50%)',
+        background:'#1e293b',color:'#e2e8f0',fontSize:11,lineHeight:'1.6',
+        padding:'8px 12px',borderRadius:8,
+        boxShadow:'0 4px 20px rgba(0,0,0,0.5)',zIndex:9990,
+        border:'1px solid #334155',pointerEvents:'none',
+        whiteSpace:'pre-wrap',minWidth:180,maxWidth:300,textAlign:'left',
+      }
+    },props.text)
+  );
+}
+
+// ── WelcomeModal: first-visit 5-step guide ─────────────────────────────────────────────────────────────────────────────────
+function WelcomeModal(props){
+  var steps=[
+    {icon:'🎬',title:'영상 불러오기',desc:'화면 왼쪽 영역에 작업 영상 파일을 끌어다 놓으세요. MP4, MOV 등 대부분 형식이 됩니다.'},
+    {icon:'▶️',title:'영상 재생하기',desc:'스페이스바 또는 재생 버튼으로 영상을 재생합니다.'},
+    {icon:'🖱️',title:'작업 기록하기',desc:'작업이 시작될 때 영상 클릭(또는 스페이스바) → 끝날 때 다시 클릭. 이것만 하면 됩니다!'},
+    {icon:'📊',title:'결과 확인하기',desc:'상단 탭에서 차트·작업배분·분석결과 등을 놀러 분석 결과를 확인하세요.'},
+    {icon:'📄',title:'보고서 내보내기',desc:'상단 SOP 버튼으로 작업표준서를 PDF/Excel로 저장할 수 있습니다.'},
+  ];
+  var [dontShow,setDontShow]=React.useState(false);
+  function handleClose(){
+    if(dontShow) localStorage.setItem('wvas_welcomed','1');
+    props.onClose();
+  }
+  return React.createElement('div',{
+    style:{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,0.75)',display:'flex',alignItems:'center',justifyContent:'center'},
+    onClick:handleClose,
+  },
+    React.createElement('div',{
+      style:{background:'#1e293b',border:'1px solid #475569',borderRadius:16,padding:'28px 32px',width:480,maxWidth:'95vw',boxShadow:'0 20px 60px rgba(0,0,0,0.6)'},
+      onClick:function(e){e.stopPropagation();},
+    },
+      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:20}},
+        React.createElement('span',{style:{fontSize:28}},'👋'),
+        React.createElement('div',null,
+          React.createElement('div',{style:{fontSize:16,fontWeight:700,color:'#f1f5f9'}},'첫으로 오셨군요! 환영합니다'),
+          React.createElement('div',{style:{fontSize:12,color:'#64748b'}},'5단계만 따라하면 바로 사용할 수 있어요')
+        )
+      ),
+      steps.map(function(s,i){
+        return React.createElement('div',{key:i,style:{display:'flex',gap:12,marginBottom:14,alignItems:'flex-start'}},
+          React.createElement('div',{style:{
+            width:34,height:34,borderRadius:'50%',background:'#0f172a',border:'2px solid #3b82f6',
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0,
+          }},s.icon),
+          React.createElement('div',null,
+            React.createElement('div',{style:{fontSize:13,fontWeight:700,color:'#e2e8f0',marginBottom:2}},(i+1)+'. '+s.title),
+            React.createElement('div',{style:{fontSize:12,color:'#94a3b8',lineHeight:'1.6'}},s.desc)
+          )
+        );
+      }),
+      React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:20,paddingTop:16,borderTop:'1px solid #334155'}},
+        React.createElement('label',{style:{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'#64748b',cursor:'pointer'}},
+          React.createElement('input',{type:'checkbox',checked:dontShow,onChange:function(e){setDontShow(e.target.checked);}}),
+          '다시 보지 않기'
+        ),
+        React.createElement('button',{
+          style:{background:'#3b82f6',color:'#fff',border:'none',borderRadius:8,padding:'8px 22px',fontSize:13,fontWeight:700,cursor:'pointer'},
+          onClick:handleClose,
+        },'시작하기 →')
+      )
+    )
+  );
+}
+
+// ── StepGuide: context-sensitive step indicator ───────────────────────────────────────────────────────────────────────────
+function StepGuide(props){
+  if(!props.beginnerMode) return null;
+  var step,msg,color;
+  if(!props.hasVideo){
+    step=1; msg='1단계: 영상 파일을 이 화면에 끌어다 놓으세요 (드래그 앤 드롭)'; color='#3b82f6';
+  } else if(!props.hasTasks){
+    step=2; msg='2단계: 영상 재생 중 작업 시작 시 클릭, 끝날 때 다시 클릭하여 기록하세요'; color='#f59e0b';
+  } else if(props.taskCount<3){
+    step=3; msg='3단계: 작업을 더 기록해보세요. 3개 이상이면 분석이 풍부해집니다 ('+props.taskCount+'개 기록됨)'; color='#22c55e';
+  } else {
+    step=4; msg='4단계 완료! 상단 탭에서 차트·분석결과·작업배분 등을 눠러 결과를 확인하세요! ('+props.taskCount+'개 기록됨)'; color='#a855f7';
+  }
+  return React.createElement('div',{
+    style:{
+      background:'rgba(15,23,42,0.95)',borderBottom:'2px solid '+color,
+      padding:'5px 14px',fontSize:12,color:'#e2e8f0',
+      display:'flex',alignItems:'center',gap:8,flexShrink:0,
+    }
+  },
+    React.createElement('span',{style:{
+      background:color,color:'#fff',borderRadius:12,padding:'2px 8px',fontSize:10,fontWeight:700,whiteSpace:'nowrap',
+    }},'STEP '+step),
+    React.createElement('span',null,msg)
+  );
+}
+
+// ── GlossaryModal: IE term dictionary ──────────────────────────────────
+// ── TaskDictBtn: verb dictionary ─────────────────────────────────────
+
+// ── AiAnalysisModal ──────────────────────────────────────────────────────────
+
+// ── BottleneckChart ──────────────────────────────────────────────────────────
+function BottleneckChart(props){
+  var model=props.model;
+  if(!model||!model.processes||model.processes.length===0) return null;
+  var procs=model.processes.slice().sort(function(a,b){return(a.order||0)-(b.order||0);});
+  var takt=model.taktTime||60;
+  var maxTime=Math.max.apply(null,procs.map(function(p){return p.stdTimeTotal||0;}).concat([takt]))*1.2||120;
+  var bottleneckId=procs.reduce(function(a,b){return(a.stdTimeTotal||0)>=(b.stdTimeTotal||0)?a:b;},{}).id;
+
+  return React.createElement('div',{style:{marginTop:12}},
+    React.createElement('div',{style:{fontSize:12,fontWeight:700,color:'#94a3b8',marginBottom:8}},
+      '📊 공정별 표준시간 비교 (병목 분석)'
+    ),
+    React.createElement('div',{style:{background:'#0f172a',borderRadius:8,padding:'12px 14px'}},
+      procs.map(function(p){
+        var t=p.stdTimeTotal||0;
+        var pct=Math.min(t/maxTime*100,100);
+        var isBN=p.id===bottleneckId&&t>0;
+        var overTakt=t>takt;
+        var color=overTakt?'#ef4444':isBN?'#f59e0b':'#22c55e';
+        return React.createElement('div',{key:p.id,style:{marginBottom:10}},
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3}},
+            React.createElement('span',{style:{color:isBN?'#fbbf24':'#e2e8f0',fontWeight:isBN?700:400}},
+              (isBN?'🔴 ':'🟢 ')+p.name+(overTakt?' ⚠ 택트 초과':isBN?' ← 병목':'')
+            ),
+            React.createElement('span',{style:{color:color,fontWeight:600}},t.toFixed(1)+'s')
+          ),
+          React.createElement('div',{style:{height:18,background:'#1e293b',borderRadius:4,position:'relative',overflow:'hidden'}},
+            React.createElement('div',{style:{height:'100%',width:pct+'%',background:color,borderRadius:4,transition:'width 0.5s ease'}}),
+            React.createElement('div',{style:{
+              position:'absolute',top:0,left:(takt/maxTime*100)+'%',
+              width:2,height:'100%',background:'#f43f5e',
+            }}),
+            React.createElement('span',{style:{
+              position:'absolute',top:1,right:4,fontSize:10,color:'#475569'
+            }},p.cycleCount?p.cycleCount+'사이클':'')
+          )
+        );
+      }),
+      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6,marginTop:8,fontSize:10,color:'#64748b'}},
+        React.createElement('div',{style:{width:20,height:2,background:'#f43f5e'}}),
+        React.createElement('span',null,'택트타임: '+takt+'s'),
+        React.createElement('div',{style:{width:10,height:10,background:'#22c55e',borderRadius:2,marginLeft:12}}),
+        React.createElement('span',null,'정상'),
+        React.createElement('div',{style:{width:10,height:10,background:'#f59e0b',borderRadius:2,marginLeft:6}}),
+        React.createElement('span',null,'병목'),
+        React.createElement('div',{style:{width:10,height:10,background:'#ef4444',borderRadius:2,marginLeft:6}}),
+        React.createElement('span',null,'택트 초과')
+      )
+    )
+  );
+}
+
+// ── ModelBrowserModal ─────────────────────────────────────────────────────────
+
+// ── WorkAssignmentTab ─────────────────────────────────────────────────────────
+function WorkAssignmentTab(props){
+  var useState=React.useState, useMemo=React.useMemo;
+  var _sm=useState(modelsLoad()); var models=_sm[0],setModels=_sm[1];
+  var _si=useState(models.length>0?models[0].id:null); var selModelId=_si[0],setSelModelId=_si[1];
+  var _sw=useState({}); var workerCounts=_sw[0],setWorkerCounts=_sw[1];
+  var _cm=useState('process'); var chartMode=_cm[0],setChartMode=_cm[1];
+  var _rm=useState({}); var rebalMoves=_rm[0],setRebalMoves=_rm[1];
+
+  // Reload models when tab becomes visible
+  React.useEffect(function(){setModels(modelsLoad());},[]);
+
+  var selModel=models.find(function(m){return m.id===selModelId;})||null;
+  var procs=selModel?selModel.processes.slice().sort(function(a,b){return(a.order||0)-(b.order||0);}):[];
+  var takt=selModel?selModel.taktTime||60:60;
+
+  function getWorkers(pid){ return workerCounts[pid]||1; }
+  function setWorkers(pid,n){ setWorkerCounts(function(w){return{...w,[pid]:Math.max(1,n)};}); }
+
+  var stats=useMemo(function(){
+    if(!procs.length) return null;
+    var bottleneck=procs.reduce(function(a,b){
+      var aLoad=(a.stdTimeTotal||0)/getWorkers(a.id);
+      var bLoad=(b.stdTimeTotal||0)/getWorkers(b.id);
+      return aLoad>=bLoad?a:b;
+    });
+    var totalWorkers=procs.reduce(function(s,p){return s+getWorkers(p.id);},0);
+    var maxLoad=Math.max.apply(null,procs.map(function(p){return(p.stdTimeTotal||0)/getWorkers(p.id);}));
+    var lineEff=takt>0?Math.round(procs.reduce(function(s,p){return s+(p.stdTimeTotal||0);},0)/(totalWorkers*takt)*100):0;
+    return{bottleneck,totalWorkers,maxLoad,lineEff};
+  },[procs,workerCounts,takt]);
+
+  if(models.length===0){
+    return React.createElement('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',color:'#475569',gap:12}},
+      React.createElement('div',{style:{fontSize:40}},'📱'),
+      React.createElement('div',{style:{fontSize:14,color:'#64748b'}},'저장된 모델이 없습니다'),
+      React.createElement('div',{style:{fontSize:12,color:'#475569'}},'📱 모델관리 버튼(화면 상단)을 클릭해 모델과 공정을 추가하면 여기서 편성 분석을 할 수 있습니다')
+    );
+  }
+
+  var maxBar=Math.max.apply(null,procs.map(function(p){return(p.stdTimeTotal||0)/getWorkers(p.id);})).concat?
+    Math.max.apply(null,procs.map(function(p){return(p.stdTimeTotal||0)/getWorkers(p.id);})):
+    procs.reduce(function(mx,p){return Math.max(mx,(p.stdTimeTotal||0)/getWorkers(p.id));},takt);
+  maxBar=Math.max(maxBar,takt)*1.1||120;
+
+  return React.createElement('div',{style:{padding:16,height:'100%',overflowY:'auto',boxSizing:'border-box'}},
+
+    // ── Header ──
+    React.createElement('div',{style:{display:'flex',alignItems:'center',gap:12,marginBottom:14,flexWrap:'wrap'}},
+      React.createElement('h2',{style:{margin:0,fontSize:15,fontWeight:700,color:'#e2e8f0'}},'📋 작업편성표'),
+      React.createElement('select',{
+        value:selModelId||'',
+        onChange:function(e){setSelModelId(e.target.value||null);setWorkerCounts({});},
+        style:{background:'#0f172a',border:'1px solid #334155',borderRadius:6,padding:'5px 10px',color:'#e2e8f0',fontSize:13,outline:'none'},
+      },
+        React.createElement('option',{value:''},'모델 선택...'),
+        models.map(function(m){return React.createElement('option',{key:m.id,value:m.id},m.name+(m.code?' ('+m.code+')':''));})
+      ),
+      selModel&&React.createElement('span',{style:{fontSize:12,color:'#64748b'}},'택트타임: '+takt+'s'),
+      React.createElement('div',{style:{display:'flex',gap:4,background:'#0f172a',borderRadius:8,padding:3}},
+        React.createElement('button',{
+          style:{background:chartMode==='process'?'#3b82f6':'transparent',color:chartMode==='process'?'#fff':'#64748b',
+                 border:'none',borderRadius:6,padding:'4px 12px',fontSize:12,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'},
+          onClick:function(){setChartMode('process');},
+        },'📊 공정기준'),
+        React.createElement('button',{
+          style:{background:chartMode==='parts'?'#7c3aed':'transparent',color:chartMode==='parts'?'#fff':'#64748b',
+                 border:'none',borderRadius:6,padding:'4px 12px',fontSize:12,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'},
+          onClick:function(){setChartMode('parts');},
+        },'🔧 부품기준'),
+      ),
+      stats&&React.createElement('div',{style:{marginLeft:'auto',display:'flex',gap:8}},
+        React.createElement('div',{style:{background:'#0f172a',borderRadius:6,padding:'4px 10px',textAlign:'center'}},
+          React.createElement('div',{style:{fontSize:15,fontWeight:700,color:'#60a5fa'}},stats.totalWorkers),
+          React.createElement('div',{style:{fontSize:10,color:'#64748b'}},'총 작업자')
+        ),
+        React.createElement('div',{style:{background:'#0f172a',borderRadius:6,padding:'4px 10px',textAlign:'center'}},
+          React.createElement('div',{style:{fontSize:15,fontWeight:700,color:stats.lineEff>=80?'#22c55e':stats.lineEff>=60?'#f59e0b':'#ef4444'}},stats.lineEff+'%'),
+          React.createElement('div',{style:{fontSize:10,color:'#64748b'}},'편성효율')
+        )
+      )
+    ),
+
+    !selModel&&React.createElement('div',{style:{textAlign:'center',padding:'40px',color:'#475569'}},'위에서 모델을 선택하세요'),
+
+    selModel&&procs.length===0&&React.createElement('div',{style:{textAlign:'center',padding:'40px',color:'#475569'}},
+      '📁 모델관리에서 공정 데이터를 저장해주세요'
+    ),
+
+    selModel&&procs.length>0&&React.createElement('div',null,
+
+      // ── 부품기준 차트 (chartMode==='parts') ──
+      chartMode==='parts'&&(function(){
+        var PROC_COLORS=['#3b82f6','#a855f7','#ec4899','#f97316','#22c55e','#06b6d4','#f43f5e','#eab308'];
+        var allEntries=[];
+        procs.forEach(function(p,pi){
+          (p.tasks||[]).forEach(function(t){
+            var rf=(p.ratingFactor||100)/100;
+            var ar=1+(p.allowanceRate||15)/100;
+            allEntries.push({
+              taskName:t.name||(t.type==='waste'?'대기':'작업'),
+              type:t.type||'value-added',
+              stdTime:t.duration*rf*ar,
+              procName:p.name,procOrder:p.order||pi+1,procIdx:pi,
+              procColor:PROC_COLORS[pi%PROC_COLORS.length],
+            });
+          });
+        });
+        if(allEntries.length===0){
+          return React.createElement('div',{style:{background:'#0f172a',borderRadius:10,padding:24,marginBottom:14,
+            textAlign:'center',color:'#475569',fontSize:12}},
+            '공정에 작업 데이터가 없습니다. 작업을 기록하고 공정으로 저장해주세요.');
+        }
+        var groupMap={};
+        allEntries.forEach(function(e){
+          if(!groupMap[e.taskName])groupMap[e.taskName]={name:e.taskName,type:e.type,total:0,byProc:{}};
+          groupMap[e.taskName].total+=e.stdTime;
+          if(!groupMap[e.taskName].byProc[e.procName])groupMap[e.taskName].byProc[e.procName]={time:0,color:e.procColor,order:e.procOrder};
+          groupMap[e.taskName].byProc[e.procName].time+=e.stdTime;
+        });
+        var groups=Object.values(groupMap).sort(function(a,b){return b.total-a.total;});
+        var maxTotal=groups.length>0?groups[0].total:1;
+        var TYPE_COLOR={'value-added':'#22c55e','auxiliary':'#f59e0b','waste':'#ef4444'};
+        return React.createElement('div',{style:{background:'#0f172a',borderRadius:10,padding:14,marginBottom:14}},
+          React.createElement('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:12,flexWrap:'wrap'}},
+            React.createElement('div',{style:{fontSize:12,fontWeight:700,color:'#94a3b8'}},'🔧 작업(부품)기준 표준시간 비교'),
+            React.createElement('div',{style:{fontSize:11,color:'#475569'}},'\u2014 어떤 작업이 시간을 많이 차지하는지, 공정별로 비교'),
+            React.createElement('div',{style:{display:'flex',gap:6,flexWrap:'wrap',marginLeft:'auto'}},
+              procs.map(function(p,pi){
+                return React.createElement('div',{key:p.id,style:{display:'flex',alignItems:'center',gap:4,fontSize:10,color:'#94a3b8'}},
+                  React.createElement('div',{style:{width:10,height:10,borderRadius:2,background:PROC_COLORS[pi%PROC_COLORS.length]}}),
+                  (p.order||pi+1)+'공정 '+p.name
+                );
+              })
+            )
+          ),
+          groups.map(function(g){
+            var typeColor=TYPE_COLOR[g.type]||'#64748b';
+            var procEntries=Object.entries(g.byProc).sort(function(a,b){return(a[1].order||0)-(b[1].order||0);});
+            return React.createElement('div',{key:g.name,style:{marginBottom:10}},
+              React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3,alignItems:'center',gap:8}},
+                React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6,minWidth:0}},
+                  React.createElement('div',{style:{width:8,height:8,borderRadius:'50%',background:typeColor,flexShrink:0}}),
+                  React.createElement('span',{style:{color:'#e2e8f0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}},g.name)
+                ),
+                React.createElement('span',{style:{color:'#94a3b8',fontWeight:600,flexShrink:0}},g.total.toFixed(1)+'s 합계')
+              ),
+              React.createElement('div',{style:{height:20,background:'#1e293b',borderRadius:4,display:'flex',overflow:'hidden'}},
+                procEntries.map(function(entry){
+                  var procName=entry[0];var info=entry[1];
+                  var pct=info.time/maxTotal*100;
+                  return React.createElement('div',{key:procName,
+                    title:procName+': '+info.time.toFixed(1)+'s',
+                    style:{height:'100%',width:pct+'%',background:info.color,
+                           borderRight:'1px solid rgba(0,0,0,0.3)',
+                           display:'flex',alignItems:'center',paddingLeft:4,
+                           transition:'width 0.4s ease',boxSizing:'border-box'}},
+                    pct>8&&React.createElement('span',{style:{fontSize:10,color:'#fff',fontWeight:600,whiteSpace:'nowrap'}},info.time.toFixed(0)+'s')
+                  );
+                })
+              ),
+              React.createElement('div',{style:{display:'flex',gap:8,marginTop:3,flexWrap:'wrap'}},
+                procEntries.map(function(entry){
+                  var procName=entry[0];var info=entry[1];
+                  return React.createElement('span',{key:procName,
+                    style:{fontSize:10,color:info.color,display:'flex',alignItems:'center',gap:3}},
+                    React.createElement('div',{style:{width:6,height:6,borderRadius:1,background:info.color}}),
+                    procName+' '+info.time.toFixed(1)+'s'
+                  );
+                })
+              )
+            );
+          }),
+          React.createElement('div',{style:{display:'flex',gap:12,marginTop:10,paddingTop:10,borderTop:'1px solid #1e293b',flexWrap:'wrap'}},
+            [['value-added','#22c55e','\u2705 정미작업'],['auxiliary','#f59e0b','🔧 부수작업'],['waste','#ef4444','\u274c 낙비']].map(function(item){
+              var count=groups.filter(function(g){return g.type===item[0];}).length;
+              return React.createElement('div',{key:item[0],style:{display:'flex',alignItems:'center',gap:4,fontSize:10,color:'#64748b'}},
+                React.createElement('div',{style:{width:8,height:8,borderRadius:2,background:item[1]}}),
+                item[2]+' ('+count+'종)'
+              );
+            })
+          )
+        );
+      })()||null,
+
+      // ── LOB 재편성 (chartMode=parts) ──
+      chartMode==='parts'&&React.createElement(RebalanceWorkspace,{
+        procs:procs,takt:takt,
+        rebalMoves:rebalMoves,setRebalMoves:setRebalMoves,
+        getWorkers:getWorkers,stats:stats,
+      }),
+
+      // ── Bottleneck visual (공정기준) ──
+      chartMode==='process'&&React.createElement('div',{style:{background:'#0f172a',borderRadius:10,padding:14,marginBottom:14}},
+        React.createElement('div',{style:{fontSize:12,fontWeight:700,color:'#94a3b8',marginBottom:10}},
+          '📊 공정별 작업자당 부하 (야마즈미)'
+        ),
+        procs.map(function(p){
+          var load=(p.stdTimeTotal||0)/getWorkers(p.id);
+          var pct=Math.min(load/maxBar*100,100);
+          var overTakt=load>takt;
+          var isBN=stats&&p.id===stats.bottleneck.id;
+          var color=overTakt?'#ef4444':isBN?'#f59e0b':'#3b82f6';
+          return React.createElement('div',{key:p.id,style:{marginBottom:10}},
+            React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3,alignItems:'center'}},
+              React.createElement('span',{style:{color:isBN?'#fbbf24':'#e2e8f0',fontWeight:isBN?700:400,minWidth:80}},
+                p.order+'공정 '+p.name
+              ),
+              React.createElement('span',{style:{color:'#64748b',fontSize:10}},
+                '작업자당: '+load.toFixed(1)+'s'+(overTakt?' 🚨':'')
+              )
+            ),
+            React.createElement('div',{style:{height:22,background:'#1e293b',borderRadius:4,position:'relative',overflow:'visible'}},
+              React.createElement('div',{style:{height:'100%',width:pct+'%',background:color,borderRadius:4,transition:'width 0.4s',display:'flex',alignItems:'center',paddingLeft:6}},
+                pct>15&&React.createElement('span',{style:{fontSize:10,color:'#fff',fontWeight:600}},
+                  (p.stdTimeTotal||0).toFixed(0)+'s \xf7 '+getWorkers(p.id)+'명'
+                )
+              ),
+              React.createElement('div',{style:{
+                position:'absolute',top:-2,left:(takt/maxBar*100)+'%',
+                width:2,height:'calc(100% + 4px)',background:'#f43f5e',zIndex:1,
+              }}),
+              isBN&&React.createElement('span',{style:{
+                position:'absolute',top:2,right:4,fontSize:10,color:'#fbbf24',fontWeight:700,
+              }},'\u{1f534} 병목')
+            )
+          );
+        }),
+        React.createElement('div',{style:{fontSize:10,color:'#64748b',marginTop:6,display:'flex',alignItems:'center',gap:6}},
+          React.createElement('div',{style:{width:16,height:2,background:'#f43f5e'}}),
+          React.createElement('span',null,'빨간 선 = 택트타임 ('+takt+'s)')
+        )
+      ),
+
+      // ── Process table ──
+      React.createElement('div',{style:{background:'#0f172a',borderRadius:10,overflow:'hidden',marginBottom:14}},
+        React.createElement('table',{style:{width:'100%',borderCollapse:'collapse',fontSize:12}},
+          React.createElement('thead',null,
+            React.createElement('tr',{style:{background:'#1e293b'}},
+              ['순서','공정명','영상','표준시간','작업자 수','작업자당 부하','사이클','분석일','상태'].map(function(h){
+                return React.createElement('th',{key:h,style:{padding:'8px 10px',textAlign:'left',color:'#64748b',fontWeight:600,whiteSpace:'nowrap'}},h);
+              })
+            )
+          ),
+          React.createElement('tbody',null,
+            procs.map(function(p,i){
+              var load=(p.stdTimeTotal||0)/getWorkers(p.id);
+              var overTakt=load>takt;
+              var isBN=stats&&p.id===stats.bottleneck.id;
+              return React.createElement('tr',{key:p.id,
+                style:{borderTop:'1px solid #1e293b',background:isBN?'#1c1500':overTakt?'#1c0000':'transparent'}
+              },
+                React.createElement('td',{style:{padding:'8px 10px',color:'#64748b'}},p.order),
+                React.createElement('td',{style:{padding:'8px 10px',color:'#e2e8f0',fontWeight:isBN?700:400}},
+                  p.name+(isBN?' 🔴':'')
+                ),
+                React.createElement('td',{style:{padding:'8px 10px',color:'#64748b',maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},p.videoName),
+                React.createElement('td',{style:{padding:'8px 10px',color:overTakt?'#f87171':'#4ade80',fontWeight:600}},(p.stdTimeTotal||0).toFixed(1)+'s'),
+                React.createElement('td',{style:{padding:'8px 10px'}},
+                  React.createElement('div',{style:{display:'flex',alignItems:'center',gap:4}},
+                    React.createElement('button',{
+                      style:{width:22,height:22,background:'#1e293b',color:'#94a3b8',border:'1px solid #334155',borderRadius:4,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'},
+                      onClick:function(){setWorkers(p.id,getWorkers(p.id)-1);},
+                    },'-'),
+                    React.createElement('span',{style:{minWidth:20,textAlign:'center',color:'#e2e8f0',fontWeight:700}},getWorkers(p.id)),
+                    React.createElement('button',{
+                      style:{width:22,height:22,background:'#1e293b',color:'#94a3b8',border:'1px solid #334155',borderRadius:4,cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'},
+                      onClick:function(){setWorkers(p.id,getWorkers(p.id)+1);},
+                    },'+')
+                  )
+                ),
+                React.createElement('td',{style:{padding:'8px 10px',color:overTakt?'#f87171':'#e2e8f0',fontWeight:600}},load.toFixed(1)+'s'),
+                React.createElement('td',{style:{padding:'8px 10px',color:'#64748b'}},p.cycleCount||'-'),
+                React.createElement('td',{style:{padding:'8px 10px',color:'#64748b'}},p.analyzedAt?new Date(p.analyzedAt).toLocaleDateString('ko-KR'):'-'),
+                React.createElement('td',{style:{padding:'8px 10px'}},
+                  overTakt
+                    ?React.createElement('span',{style:{background:'#1c0000',color:'#f87171',borderRadius:4,padding:'2px 7px',fontSize:10,fontWeight:700}},'택트 초과')
+                    :isBN
+                      ?React.createElement('span',{style:{background:'#1c1500',color:'#fbbf24',borderRadius:4,padding:'2px 7px',fontSize:10,fontWeight:700}},'병목')
+                      :React.createElement('span',{style:{background:'#052e16',color:'#4ade80',borderRadius:4,padding:'2px 7px',fontSize:10}},'가능')
+                )
+              );
+            })
+          )
+        )
+      ),
+
+      // ── Summary ──
+      stats&&React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:10}},
+        [
+          {label:'병목 공정',value:stats.bottleneck.name,color:'#f59e0b',sub:'가장 느린 구간'},
+          {label:'병목 표준시간',value:(stats.bottleneck.stdTimeTotal||0).toFixed(1)+'s',color:stats.bottleneck.stdTimeTotal>takt?'#ef4444':'#f59e0b',sub:'1작업자 기준',tip:true},
+          {label:'총 필요 작업자',value:stats.totalWorkers+'명',color:'#60a5fa',sub:'현재 설정 기준'},
+          {label:'라인 편성효율',value:stats.lineEff+'%',color:stats.lineEff>=80?'#22c55e':stats.lineEff>=60?'#f59e0b':'#ef4444',sub:'높을수록 좋음',tip:true},
+          {label:'택트타임',value:takt+'s',color:'#a78bfa',sub:'목표 사이클타임',tip:true},
+        ].map(function(c){
+          return React.createElement('div',{key:c.label,style:{background:'#0f172a',borderRadius:8,padding:'10px 12px'}},
+            React.createElement('div',{style:{fontSize:10,color:'#64748b',marginBottom:4}},c.tip?React.createElement(IETip,{term:c.label},c.label):c.label),
+            React.createElement('div',{style:{fontSize:16,fontWeight:700,color:c.color}},c.value),
+            React.createElement('div',{style:{fontSize:10,color:'#475569'}},c.sub)
+          );
+        })
+      )
+    )
+  );
+}
+
+function ModelBrowserModal(props){
+  // props: onClose, onLoadProcess, currentTasks, currentVideoName,
+  //        taktTime, ratingFactor, allowanceRate, analysisName
+  var useState=React.useState;
+  var _ms=useState(modelsLoad()); var models=_ms[0],setModels=_ms[1];
+  var _sel=useState(models.length>0?models[0].id:null); var selModelId=_sel[0],setSelModelId=_sel[1];
+  var _mode=useState('browse'); var mode=_mode[0],setMode=_mode[1]; // 'browse'|'addModel'|'addProcess'
+  var _mn=useState(''); var newModelName=_mn[0],setNewModelName=_mn[1];
+  var _mc=useState(''); var newModelCode=_mc[0],setNewModelCode=_mc[1];
+  var _mt=useState(60);  var newModelTakt=_mt[0],setNewModelTakt=_mt[1];
+  var _pn=useState(''); var newProcName=_pn[0],setNewProcName=_pn[1];
+  var _po=useState(1);  var newProcOrder=_po[0],setNewProcOrder=_po[1];
+
+  var selModel=models.find(function(m){return m.id===selModelId;})||null;
+
+  function save(arr){ setModels(arr); modelsSave(arr); }
+
+  function addModel(){
+    if(!newModelName.trim()) return;
+    var m={id:modelsUid(),name:newModelName.trim(),code:newModelCode.trim(),
+            taktTime:newModelTakt,createdAt:Date.now(),processes:[]};
+    var arr=[...models,m]; save(arr);
+    setSelModelId(m.id); setMode('browse');
+    setNewModelName(''); setNewModelCode('');
+  }
+
+  function deleteModel(mid){
+    if(!window.confirm('모델을 삭제하시겠습니까?')) return;
+    save(models.filter(function(m){return m.id!==mid;}));
+    if(selModelId===mid) setSelModelId(null);
+  }
+
+  function saveCurrentAsProcess(){
+    if(!props.currentTasks||props.currentTasks.length===0){
+      alert('저장할 분석 데이터가 없습니다. 먼저 작업을 기록하세요.');return;
+    }
+    if(!selModelId){alert('모델을 먼저 선택하세요.');return;}
+    if(!newProcName.trim()){alert('공정명을 입력하세요.');return;}
+    var stdTotal=props.currentTasks.reduce(function(s,t){
+      return s+t.duration*(props.ratingFactor/100)*(1+props.allowanceRate/100);
+    },0);
+    var cycles=[...new Set(props.currentTasks.map(function(t){return t.cycle||1;}))];
+    var proc={
+      id:processUid(),name:newProcName.trim(),order:newProcOrder,
+      videoName:props.currentVideoName||'(영상없음)',
+      tasks:JSON.parse(JSON.stringify(props.currentTasks)),
+      taktTime:props.taktTime,ratingFactor:props.ratingFactor,
+      allowanceRate:props.allowanceRate,
+      stdTimeTotal:Math.round(stdTotal*10)/10,
+      cycleCount:cycles.length,
+      analyzedAt:Date.now(),
+    };
+    var arr=models.map(function(m){
+      if(m.id!==selModelId) return m;
+      var existing=m.processes.find(function(p){return p.name===proc.name;});
+      if(existing){
+        if(!window.confirm('"'+proc.name+'" 공정이 이미 있습니다. 덮어쓸까요?')) return m;
+        return {...m,processes:m.processes.map(function(p){return p.name===proc.name?proc:p;})};
+      }
+      return {...m,processes:[...m.processes,proc]};
+    });
+    save(arr);
+    setMode('browse');
+    alert('"'+proc.name+'" 공정이 저장됐습니다!');
+  }
+
+  function deleteProcess(mid,pid){
+    if(!window.confirm('공정을 삭제하시겠습니까?')) return;
+    save(models.map(function(m){
+      if(m.id!==mid) return m;
+      return {...m,processes:m.processes.filter(function(p){return p.id!==pid;})};
+    }));
+  }
+
+  var panelStyle={background:'#1e293b',border:'1px solid #334155',borderRadius:10,padding:14};
+
+  return React.createElement('div',{
+    style:{position:'fixed',inset:0,zIndex:9994,background:'rgba(0,0,0,0.8)',
+           display:'flex',alignItems:'flex-start',justifyContent:'center',paddingTop:40,overflowY:'auto'},
+    onClick:props.onClose,
+  },
+    React.createElement('div',{
+      style:{background:'#1e293b',border:'1px solid #334155',borderRadius:16,
+             width:860,maxWidth:'97vw',maxHeight:'88vh',overflowY:'auto',
+             boxShadow:'0 24px 80px rgba(0,0,0,0.7)',marginBottom:40},
+      onClick:function(e){e.stopPropagation();},
+    },
+      // ── Header ──
+      React.createElement('div',{style:{padding:'18px 22px',borderBottom:'1px solid #334155',display:'flex',alignItems:'center',gap:10}},
+        React.createElement('span',{style:{fontSize:22}},'📱'),
+        React.createElement('div',null,
+          React.createElement('h2',{style:{margin:0,fontSize:16,fontWeight:700,color:'#f1f5f9'}},'모델 / 공정 관리'),
+          React.createElement('p',{style:{margin:0,fontSize:11,color:'#64748b'}},'모델별로 공정 분석 데이터를 저장하고 불러옵니다')
+        ),
+        React.createElement('button',{style:{marginLeft:'auto',background:'none',border:'none',color:'#64748b',fontSize:22,cursor:'pointer'},onClick:props.onClose},'\xd7')
+      ),
+
+      React.createElement('div',{style:{display:'flex',gap:0,minHeight:500}},
+
+        // ── Left: model list ──
+        React.createElement('div',{style:{width:220,borderRight:'1px solid #334155',padding:14,flexShrink:0}},
+          React.createElement('div',{style:{fontSize:11,fontWeight:700,color:'#64748b',marginBottom:8,textTransform:'uppercase'}},'모델 목록'),
+          models.length===0&&React.createElement('div',{style:{fontSize:12,color:'#475569',padding:'12px 0'}},'모델이 없습니다.\n아래에서 추가하세요.'),
+          models.map(function(m){
+            var isSel=m.id===selModelId;
+            return React.createElement('div',{key:m.id,
+              style:{background:isSel?'#1e3a5f':'transparent',border:isSel?'1px solid #3b82f6':'1px solid transparent',
+                     borderRadius:8,padding:'8px 10px',marginBottom:6,cursor:'pointer',transition:'all 0.15s'},
+              onClick:function(){setSelModelId(m.id);setMode('browse');},
+            },
+              React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
+                React.createElement('div',null,
+                  React.createElement('div',{style:{fontSize:12,fontWeight:700,color:isSel?'#93c5fd':'#e2e8f0'}},m.name),
+                  m.code&&React.createElement('div',{style:{fontSize:10,color:'#475569'}},m.code),
+                  React.createElement('div',{style:{fontSize:10,color:'#475569'}},m.processes.length+'개 공정')
+                ),
+                React.createElement('button',{
+                  style:{background:'none',border:'none',color:'#475569',fontSize:14,cursor:'pointer',padding:'0 2px'},
+                  onClick:function(e){e.stopPropagation();deleteModel(m.id);},title:'삭제',
+                },'\xd7')
+              )
+            );
+          }),
+          React.createElement('button',{
+            style:{width:'100%',marginTop:8,background:'#1e3a5f',color:'#93c5fd',border:'1px dashed #3b82f6',
+                   borderRadius:8,padding:'8px',fontSize:12,cursor:'pointer',fontWeight:600},
+            onClick:function(){setMode('addModel');},
+          },'+ 새 모델 추가')
+        ),
+
+        // ── Right: detail ──
+        React.createElement('div',{style:{flex:1,padding:18,overflow:'auto'}},
+
+          // Add Model form
+          mode==='addModel'&&React.createElement('div',{style:panelStyle},
+            React.createElement('h3',{style:{margin:'0 0 14px',fontSize:14,color:'#f1f5f9'}},'새 모델 추가'),
+            [
+              {label:'모델명 *',ph:'예: 차량 A타입, ZG100',val:newModelName,set:setNewModelName,type:'text'},
+              {label:'모델 코드 (선택)',ph:'예: ZG-100-A',val:newModelCode,set:setNewModelCode,type:'text'},
+            ].map(function(f){
+              return React.createElement('label',{key:f.label,style:{display:'block',marginBottom:10}},
+                React.createElement('div',{style:{fontSize:11,color:'#94a3b8',marginBottom:4}},f.label),
+                React.createElement('input',{type:f.type,value:f.val,onChange:function(e){f.set(e.target.value);},placeholder:f.ph,
+                  style:{width:'100%',background:'#0f172a',border:'1px solid #334155',borderRadius:6,padding:'7px 10px',color:'#e2e8f0',fontSize:13,boxSizing:'border-box',outline:'none'}})
+              );
+            }),
+            React.createElement('label',{style:{display:'block',marginBottom:12}},
+              React.createElement('div',{style:{fontSize:11,color:'#94a3b8',marginBottom:4}},'기본 택트타임 (초)'),
+              React.createElement('input',{type:'number',value:newModelTakt,min:1,
+                onChange:function(e){setNewModelTakt(Number(e.target.value));},
+                style:{width:100,background:'#0f172a',border:'1px solid #334155',borderRadius:6,padding:'7px 10px',color:'#e2e8f0',fontSize:13,outline:'none'}})
+            ),
+            React.createElement('div',{style:{display:'flex',gap:8}},
+              React.createElement('button',{
+                style:{background:'#3b82f6',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontSize:13,fontWeight:700,cursor:'pointer'},
+                onClick:addModel,
+              },'저장'),
+              React.createElement('button',{
+                style:{background:'none',border:'1px solid #334155',color:'#94a3b8',borderRadius:8,padding:'8px 14px',fontSize:13,cursor:'pointer'},
+                onClick:function(){setMode('browse');},
+              },'취소')
+            )
+          ),
+
+          // Save current analysis as process
+          mode==='addProcess'&&React.createElement('div',{style:panelStyle},
+            React.createElement('h3',{style:{margin:'0 0 14px',fontSize:14,color:'#f1f5f9'}},
+              '"'+( selModel?selModel.name:'?')+'" 모델에 현재 분석 저장'
+            ),
+            React.createElement('div',{style:{background:'#0f172a',borderRadius:6,padding:'8px 12px',marginBottom:12,fontSize:12,color:'#64748b'}},
+              props.currentTasks&&props.currentTasks.length>0
+                ?'✅ 저장할 데이터: '+props.currentTasks.length+'개 작업 / 영상: '+(props.currentVideoName||'없음')
+                :'❌ 분석 데이터가 없습니다. 먼저 작업을 기록하세요.'
+            ),
+            React.createElement('label',{style:{display:'block',marginBottom:10}},
+              React.createElement('div',{style:{fontSize:11,color:'#94a3b8',marginBottom:4}},'공정명 *'),
+              React.createElement('input',{type:'text',value:newProcName,
+                onChange:function(e){setNewProcName(e.target.value);},
+                placeholder:'예: 1공정 조립, 2공정 체결, 검사 공정',
+                style:{width:'100%',background:'#0f172a',border:'1px solid #334155',borderRadius:6,padding:'7px 10px',color:'#e2e8f0',fontSize:13,boxSizing:'border-box',outline:'none'}})
+            ),
+            React.createElement('label',{style:{display:'block',marginBottom:12}},
+              React.createElement('div',{style:{fontSize:11,color:'#94a3b8',marginBottom:4}},'공정 순서'),
+              React.createElement('input',{type:'number',value:newProcOrder,min:1,
+                onChange:function(e){setNewProcOrder(Number(e.target.value));},
+                style:{width:80,background:'#0f172a',border:'1px solid #334155',borderRadius:6,padding:'7px 10px',color:'#e2e8f0',fontSize:13,outline:'none'}})
+            ),
+            React.createElement('div',{style:{display:'flex',gap:8}},
+              React.createElement('button',{
+                style:{background:'#22c55e',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontSize:13,fontWeight:700,cursor:'pointer'},
+                onClick:saveCurrentAsProcess,
+              },'💾 저장'),
+              React.createElement('button',{
+                style:{background:'none',border:'1px solid #334155',color:'#94a3b8',borderRadius:8,padding:'8px 14px',fontSize:13,cursor:'pointer'},
+                onClick:function(){setMode('browse');},
+              },'취소')
+            )
+          ),
+
+          // Browse: selected model detail
+          mode==='browse'&&selModel&&React.createElement('div',null,
+            // Model header
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:14,flexWrap:'wrap'}},
+              React.createElement('div',null,
+                React.createElement('h3',{style:{margin:0,fontSize:15,color:'#f1f5f9'}},selModel.name),
+                selModel.code&&React.createElement('span',{style:{fontSize:11,color:'#64748b'}},selModel.code),
+              ),
+              React.createElement('span',{style:{background:'#1e3a5f',color:'#93c5fd',borderRadius:20,padding:'2px 10px',fontSize:11,marginLeft:'auto'}},
+                selModel.processes.length+'개 공정'
+              ),
+              React.createElement('button',{
+                style:{background:'#1e3a5f',color:'#93c5fd',border:'1px solid #3b82f6',borderRadius:8,padding:'5px 12px',fontSize:12,fontWeight:700,cursor:'pointer'},
+                onClick:function(){
+                  setNewProcName('');setNewProcOrder(selModel.processes.length+1);
+                  setMode('addProcess');
+                },
+              },'+ 현재 분석 저장')
+            ),
+
+            // Bottleneck chart
+            React.createElement(BottleneckChart,{model:selModel}),
+
+            // Process list
+            React.createElement('div',{style:{marginTop:14}},
+              React.createElement('div',{style:{fontSize:11,fontWeight:700,color:'#64748b',marginBottom:8}},'공정 목록 (클릭하면 분석 데이터 불러오기)'),
+              selModel.processes.length===0&&React.createElement('div',{
+                style:{background:'#0f172a',borderRadius:8,padding:'24px',textAlign:'center',color:'#475569',fontSize:12}
+              },
+                '📤 "+ 현재 분석 저장" 버튼으로 분석한 공정을 저장해보세요'
+              ),
+              selModel.processes.slice().sort(function(a,b){return(a.order||0)-(b.order||0);})
+              .map(function(p){
+                var date=p.analyzedAt?new Date(p.analyzedAt).toLocaleDateString('ko-KR'):'';
+                var overTakt=p.stdTimeTotal>selModel.taktTime;
+                return React.createElement('div',{key:p.id,
+                  style:{background:'#0f172a',border:'1px solid #334155',borderRadius:8,
+                         padding:'12px 14px',marginBottom:8,cursor:'pointer',
+                         transition:'border-color 0.15s'},
+                  onMouseEnter:function(e){e.currentTarget.style.borderColor='#3b82f6';},
+                  onMouseLeave:function(e){e.currentTarget.style.borderColor='#334155';},
+                  onClick:function(){
+                    if(window.confirm('"'+p.name+'" 공정 데이터를 불러오겠습니까?\n현재 작업 기록은 사라집니다.')){
+                      props.onLoadProcess(p);
+                      props.onClose();
+                    }
+                  },
+                },
+                  React.createElement('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between'}},
+                    React.createElement('div',null,
+                      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:4}},
+                        React.createElement('span',{style:{background:'#1e293b',color:'#94a3b8',borderRadius:4,padding:'1px 8px',fontSize:10,fontWeight:700}},
+                          p.order+'공정'
+                        ),
+                        React.createElement('span',{style:{fontSize:13,fontWeight:700,color:'#e2e8f0'}},p.name)
+                      ),
+                      React.createElement('div',{style:{display:'flex',gap:12,fontSize:11,color:'#64748b',flexWrap:'wrap'}},
+                        React.createElement('span',null,'📎 '+p.videoName),
+                        React.createElement('span',null,'⏱ ST: ',
+                          React.createElement('strong',{style:{color:overTakt?'#ef4444':'#4ade80'}},p.stdTimeTotal+'s')
+                        ),
+                        React.createElement('span',null,'🔄 '+p.cycleCount+'사이클'),
+                        React.createElement('span',null,'📅 '+date),
+                      )
+                    ),
+                    React.createElement('div',{style:{display:'flex',gap:6,alignItems:'center'}},
+                      overTakt&&React.createElement('span',{style:{background:'#1c0000',color:'#f87171',borderRadius:4,padding:'2px 6px',fontSize:10,fontWeight:700}},'택트 초과'),
+                      React.createElement('button',{
+                        style:{background:'none',border:'none',color:'#475569',fontSize:16,cursor:'pointer',padding:'0 4px'},
+                        onClick:function(e){e.stopPropagation();deleteProcess(selModel.id,p.id);},
+                        title:'삭제',
+                      },'\u{1f5d1}')
+                    )
+                  )
+                );
+              })
+            )
+          ),
+
+          // Browse: no model selected
+          mode==='browse'&&!selModel&&React.createElement('div',{style:{textAlign:'center',padding:'60px 20px',color:'#475569'}},
+            React.createElement('div',{style:{fontSize:40,marginBottom:12}},'📱'),
+            React.createElement('div',{style:{fontSize:14,color:'#64748b'}},'왼쪽에서 모델을 선택하거나 새 모델을 추가하세요')
+          )
+        )
+      )
+    )
+  );
+}
+
+function AiAnalysisModal(props){
+  // props: onClose, onApply, videoFiles (Map: id->File), activeVideoId, videoName
+  var useState=React.useState, useRef=React.useRef, useEffect=React.useEffect;
+  var _su=useState('http://localhost:8000'); var serverUrl=_su[0],setServerUrl=_su[1];
+  var _sf=useState(5);   var sampleFps=_sf[0],setSampleFps=_sf[1];
+  var _si=useState(1.5); var idleThr=_si[0],setIdleThr=_si[1];
+  var _sm=useState(1.0); var minSeg=_sm[0],setMinSeg=_sm[1];
+  var _sy=useState(true);var useYolo=_sy[0],setUseYolo=_sy[1];
+  var _sp=useState(0);   var progress=_sp[0],setProgress=_sp[1];
+  var _ss=useState('대기 중...'); var status=_ss[0],setStatus=_ss[1];
+  var _sb=useState(false); var busy=_sb[0],setBusy=_sb[1];
+  var _sr=useState(null);  var result=_sr[0],setResult=_sr[1];
+  var _se=useState('');    var errMsg=_se[0],setErrMsg=_se[1];
+  var _sh=useState(null);  var health=_sh[0],setHealth=_sh[1];
+  var abortRef=useRef(null);
+
+  // 서버 상태 자동 체크
+  useEffect(function(){
+    var t=setTimeout(function(){checkHealth(serverUrl).then(function(h){setHealth(h);});},300);
+    return function(){clearTimeout(t);};
+  },[serverUrl]);
+
+  function checkHealth(url){
+    return fetch(url+'/health',{signal:AbortSignal.timeout(3000)})
+      .then(function(r){return r.json();})
+      .catch(function(){return null;});
+  }
+
+  function startAnalysis(){
+    var videoFile=props.videoFiles&&props.videoFiles.get(props.activeVideoId);
+    if(!videoFile){
+      setErrMsg('❌ 분석할 영상 파일이 없습니다. 먼저 영상을 불러오세요.');
+      return;
+    }
+    setBusy(true); setErrMsg(''); setResult(null); setProgress(2); setStatus('서버 연결 중...');
+
+    var ctrl=new AbortController(); abortRef.current=ctrl;
+    var fd=new FormData();
+    fd.append('file',videoFile);
+    fd.append('sample_fps',String(sampleFps));
+    fd.append('idle_threshold',String(idleThr));
+    fd.append('min_segment',String(minSeg));
+    fd.append('use_yolo',useYolo?'true':'false');
+    fd.append('worker_id','W1');
+
+    // SSE streaming approach
+    var es=null;
+
+    // Use fetch + ReadableStream for SSE with POST body
+    setStatus('영상 업로드 중...');
+    setProgress(5);
+
+    fetch(serverUrl+'/analyze/stream',{method:'POST',body:fd,signal:ctrl.signal})
+      .then(function(res){
+        if(!res.ok) return res.json().then(function(e){throw new Error(e.error||'HTTP '+res.status);});
+        setProgress(10); setStatus('AI 분석 시작...');
+        var reader=res.body.getReader(); var dec=new TextDecoder(); var buf='';
+        function pump(){
+          return reader.read().then(function(d){
+            if(d.done) return;
+            buf+=dec.decode(d.value,{stream:true});
+            var lines=buf.split('\n'); buf=lines.pop();
+            lines.forEach(function(line){
+              if(!line.startsWith('data:')) return;
+              var raw=line.slice(5).trim();
+              if(raw==='[DONE]') return;
+              try{
+                var obj=JSON.parse(raw);
+                if(obj.progress!=null) setProgress(obj.progress);
+                if(obj.status)   setStatus(obj.status);
+                if(obj.result){
+                  if(obj.result.error){ setErrMsg('❌ '+obj.result.error); setBusy(false); }
+                  else { setResult(obj.result); setBusy(false); setProgress(100); setStatus('분석 완료!'); }
+                }
+              }catch(e2){}
+            });
+            return pump();
+          });
+        }
+        return pump();
+      })
+      .catch(function(e){
+        if(e.name!=='AbortError') setErrMsg('❌ '+e.message);
+        setBusy(false);
+      });
+  }
+
+  function cancel(){
+    if(abortRef.current) abortRef.current.abort();
+    setBusy(false); setStatus('취소됨');
+  }
+
+  function applyResult(){
+    if(result&&result.tasks) props.onApply(result.tasks);
+    props.onClose();
+  }
+
+  var hasCv=health&&health.opencv;
+  var hasYolo=health&&health.yolo_pose;
+  var serverOk=health&&health.status==='ok';
+
+  return React.createElement('div',{
+    style:{position:'fixed',inset:0,zIndex:9995,background:'rgba(0,0,0,0.8)',
+           display:'flex',alignItems:'center',justifyContent:'center'},
+    onClick:function(e){if(!busy) props.onClose();},
+  },
+    React.createElement('div',{
+      style:{background:'#1e293b',border:'1px solid #334155',borderRadius:16,
+             padding:'24px',width:560,maxWidth:'96vw',maxHeight:'90vh',overflowY:'auto',
+             boxShadow:'0 24px 80px rgba(0,0,0,0.7)'},
+      onClick:function(e){e.stopPropagation();},
+    },
+      // ── Title ──
+      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:18}},
+        React.createElement('span',{style:{fontSize:26}},'🤖'),
+        React.createElement('div',null,
+          React.createElement('h2',{style:{margin:0,fontSize:16,fontWeight:700,color:'#f1f5f9'}},'AI 자동 구간 분석'),
+          React.createElement('p',{style:{margin:0,fontSize:12,color:'#64748b'}},'영상을 AI가 분석해 작업 시작/종료를 자동 마킹합니다')
+        ),
+        React.createElement('button',{style:{marginLeft:'auto',background:'none',border:'none',color:'#64748b',fontSize:20,cursor:'pointer'},onClick:props.onClose},'\xd7')
+      ),
+
+      // ── Server status ──
+      React.createElement('div',{style:{background:'#0f172a',borderRadius:8,padding:'10px 14px',marginBottom:14,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}},
+        React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6,flex:1}},
+          React.createElement('span',{style:{fontSize:11,color:'#64748b'}},'AI 서버:'),
+          React.createElement('input',{
+            type:'text',value:serverUrl,onChange:function(e){setServerUrl(e.target.value);setHealth(null);},
+            style:{flex:1,background:'transparent',border:'1px solid #334155',borderRadius:4,padding:'3px 8px',color:'#e2e8f0',fontSize:12,outline:'none'},
+          })
+        ),
+        health===null
+          ?React.createElement('span',{style:{fontSize:11,color:'#64748b'}},'연결 중...')
+          :serverOk
+            ?React.createElement('span',{style:{fontSize:11,color:'#4ade80',fontWeight:600}},
+                '✅ 연결됨 | OpenCV:'+( hasCv?'✅':'❌')+' | YOLO:'+(hasYolo?'✅':'✘'))
+            :React.createElement('span',{style:{fontSize:11,color:'#f87171'}},'❌ 서버 연결 안됨 (start.bat 실행 필요)')
+      ),
+
+      // ── Video file status ──
+      React.createElement('div',{style:{background:'#0f172a',borderRadius:8,padding:'8px 14px',marginBottom:14,fontSize:12}},
+        props.activeVideoId&&props.videoFiles&&props.videoFiles.get(props.activeVideoId)
+          ?React.createElement('span',{style:{color:'#4ade80'}},'✅ 분석 대상: '+props.videoName)
+          :React.createElement('span',{style:{color:'#f87171'}},'❌ 영상을 먼저 불러오세요')
+      ),
+
+      // ── Settings ──
+      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}},
+        [
+          {label:'샘플링 FPS',desc:'높을수록 정밀, 느림',val:sampleFps,set:setSampleFps,min:1,max:15,step:1,unit:'fps'},
+          {label:'대기 감지 임계값',desc:'낮을수록 민감',val:idleThr,set:setIdleThr,min:0.3,max:5,step:0.1,unit:''},
+          {label:'최소 구간 길이',desc:'이보다 짧으면 무시',val:minSeg,set:setMinSeg,min:0.5,max:5,step:0.5,unit:'초'},
+        ].map(function(s){
+          return React.createElement('label',{key:s.label,style:{display:'flex',flexDirection:'column',gap:3}},
+            React.createElement('span',{style:{fontSize:11,color:'#94a3b8',fontWeight:600}},s.label),
+            React.createElement('span',{style:{fontSize:10,color:'#475569'}},s.desc),
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:4}},
+              React.createElement('input',{type:'range',min:s.min,max:s.max,step:s.step,value:s.val,
+                onChange:function(e){s.set(Number(e.target.value));},
+                style:{flex:1,accentColor:'#3b82f6'}}),
+              React.createElement('span',{style:{fontSize:11,color:'#60a5fa',minWidth:32,textAlign:'right'}},s.val+s.unit)
+            )
+          );
+        })
+      ),
+      React.createElement('label',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:14,fontSize:12,color:'#94a3b8',cursor:'pointer'}},
+        React.createElement('input',{type:'checkbox',checked:useYolo,onChange:function(e){setUseYolo(e.target.checked);},style:{accentColor:'#3b82f6'}}),
+        'YOLO Pose 사용 (설치 시 더 정확)',
+        !hasYolo&&React.createElement('span',{style:{color:'#f59e0b',fontSize:10,marginLeft:4}},'(미설치 — 광학흐름 모드로 동작)')
+      ),
+
+      // ── Error ──
+      errMsg&&React.createElement('div',{style:{background:'#1c0000',border:'1px solid #ef4444',borderRadius:8,padding:'10px 14px',marginBottom:12,fontSize:12,color:'#f87171'}},errMsg),
+
+      // ── Progress ──
+      busy&&React.createElement('div',{style:{marginBottom:14}},
+        React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:11,color:'#94a3b8',marginBottom:4}},
+          React.createElement('span',null,status),
+          React.createElement('span',null,progress+'%')
+        ),
+        React.createElement('div',{style:{height:8,background:'#0f172a',borderRadius:4,overflow:'hidden'}},
+          React.createElement('div',{style:{height:'100%',width:progress+'%',background:'linear-gradient(90deg,#3b82f6,#8b5cf6)',borderRadius:4,transition:'width 0.4s ease'}})
+        )
+      ),
+
+      // ── Result preview ──
+      result&&React.createElement('div',{style:{background:'#052e16',border:'1px solid #22c55e',borderRadius:8,padding:'12px 14px',marginBottom:14}},
+        React.createElement('div',{style:{fontSize:13,color:'#4ade80',fontWeight:700,marginBottom:6}},
+          '✅ 분석 완료: '+result.tasks.length+'개 구간 감지'),
+        React.createElement('div',{style:{fontSize:11,color:'#86efac',marginBottom:6}},
+          '영상 길이: '+result.duration.toFixed(1)+'s | 방법: '+(result.method==='yolo_pose'?'YOLO Pose':'광학흐름')
+          +' | 프레임: '+result.analyzed_frames),
+        React.createElement('div',{style:{display:'flex',gap:8,flexWrap:'wrap',marginBottom:6}},
+          [
+            {label:'구간 합계',val:result.tasks.length,c:'#60a5fa'},
+            {label:'작업',val:result.tasks.filter(function(t){return t.type!=='waste';}).length,c:'#4ade80'},
+            {label:'대기(낙비)',val:result.tasks.filter(function(t){return t.type==='waste';}).length,c:'#f87171'},
+          ].map(function(k){
+            return React.createElement('div',{key:k.label,style:{background:'#0f172a',borderRadius:6,padding:'4px 10px',textAlign:'center'}},
+              React.createElement('div',{style:{fontSize:16,fontWeight:700,color:k.c}},k.val),
+              React.createElement('div',{style:{fontSize:10,color:'#64748b'}},k.label)
+            );
+          })
+        ),
+        React.createElement('div',{style:{maxHeight:120,overflowY:'auto',fontSize:11,color:'#64748b'}},
+          result.tasks.slice(0,8).map(function(t,i){
+            return React.createElement('div',{key:i,style:{padding:'2px 0',borderBottom:'1px solid #0f172a',color:t.type==='waste'?'#f87171':'#86efac'}},
+              (t.type==='waste'?'🔴':'🟢')+' '+t.name+' ('+t.startTime.toFixed(1)+'s - '+t.endTime.toFixed(1)+'s, '+t.duration.toFixed(1)+'s)'
+            );
+          }),
+          result.tasks.length>8&&React.createElement('div',{style:{color:'#475569',textAlign:'center',padding:4}},
+            '... 외 '+(result.tasks.length-8)+'개')
+        )
+      ),
+
+      // ── Buttons ──
+      React.createElement('div',{style:{display:'flex',gap:8,justifyContent:'flex-end',flexWrap:'wrap'}},
+        !busy&&!result&&React.createElement('button',{
+          style:{background:'none',border:'1px solid #334155',color:'#94a3b8',borderRadius:8,padding:'8px 16px',fontSize:13,cursor:'pointer'},
+          onClick:props.onClose,
+        },'취소'),
+        busy
+          ?React.createElement('button',{
+              style:{background:'#7f1d1d',color:'#fca5a5',border:'none',borderRadius:8,padding:'8px 16px',fontSize:13,cursor:'pointer'},
+              onClick:cancel,
+            },'⏹ 취소')
+          :!result&&React.createElement('button',{
+              style:{background:serverOk?'#3b82f6':'#334155',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontSize:13,fontWeight:700,cursor:serverOk?'pointer':'not-allowed'},
+              onClick:startAnalysis,
+              disabled:!serverOk,
+            },'🤖 AI 분석 시작'),
+        result&&React.createElement('button',{
+          style:{background:'none',border:'1px solid #334155',color:'#94a3b8',borderRadius:8,padding:'8px 14px',fontSize:13,cursor:'pointer'},
+          onClick:function(){setResult(null);setProgress(0);setStatus('대기 중...');},
+        },'다시 분석'),
+        result&&React.createElement('button',{
+          style:{background:'#22c55e',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontSize:13,fontWeight:700,cursor:'pointer'},
+          onClick:applyResult,
+        },'✅ 결과 적용')
+      ),
+
+      // ── Setup guide ──
+      !serverOk&&!busy&&React.createElement('div',{style:{background:'#0f172a',borderRadius:8,padding:'12px 14px',marginTop:14,fontSize:11,color:'#64748b',lineHeight:'1.8'}},
+        React.createElement('strong',{style:{color:'#94a3b8',display:'block',marginBottom:4}},'🔧 서버 시작 방법:'),
+        React.createElement('div',null,'1. 먼저 설치: ',React.createElement('code',{style:{background:'#1e293b',padding:'1px 6px',borderRadius:3,color:'#60a5fa'}},'backend/install.bat'),' 더블클릭'),
+        React.createElement('div',null,'2. 서버 실행: ',React.createElement('code',{style:{background:'#1e293b',padding:'1px 6px',borderRadius:3,color:'#60a5fa'}},'backend/start.bat'),' 더블클릭'),
+        React.createElement('div',null,'3. 이 창에서 ✅ 연결 확인 후 분석 시작')
+      )
+    )
+  );
+}
+
+function TaskDictBtn(props){
+  var _to=React.useState(false); var open=_to[0],setOpen=_to[1];
+  var DICT=[
+    {cat:'🤚 이동 (Motion)',words:['손 이동','몸 이동','보행 이동']},
+    {cat:'✋ 취급 (Handling)',words:['잡기','놓기','위치 맞춤']},
+    {cat:'🔧 조립 (Assembly)',words:['삽입','체결','분리']},
+    {cat:'🔍 검사 (Inspection)',words:['육안확인','측정','판단']},
+    {cat:'📋 부가작업 (Support)',words:['기록','라벨','포장']},
+  ];
+  return React.createElement('span',{style:{position:'relative',display:'inline-flex',flexShrink:0}},
+    React.createElement('button',{
+      type:'button',
+      style:{fontSize:10,background:'#1e3a5f',color:'#93c5fd',border:'1px solid #1e4976',borderRadius:3,padding:'1px 5px',cursor:'pointer',lineHeight:'1.6',whiteSpace:'nowrap'},
+      onClick:function(e){e.stopPropagation();setOpen(function(v){return !v;});},
+      title:'작업명 사전에서 선택',
+    },'📖'),
+    open&&React.createElement('div',{
+      style:{position:'absolute',top:'calc(100% + 4px)',left:0,zIndex:2000,
+             background:'#1e293b',border:'1px solid #334155',borderRadius:8,
+             padding:'10px',minWidth:230,boxShadow:'0 8px 30px rgba(0,0,0,0.6)'},
+      onClick:function(e){e.stopPropagation();},
+    },
+      React.createElement('div',{style:{fontSize:10,color:'#64748b',marginBottom:8,fontWeight:600}},'클릭하면 입력됩니다'),
+      DICT.map(function(cat){
+        return React.createElement('div',{key:cat.cat,style:{marginBottom:8}},
+          React.createElement('div',{style:{fontSize:10,color:'#94a3b8',marginBottom:3,fontWeight:600}},cat.cat),
+          React.createElement('div',{style:{display:'flex',flexWrap:'wrap',gap:3}},
+            cat.words.map(function(w){
+              return React.createElement('button',{
+                key:w,type:'button',
+                style:{fontSize:11,background:'#0f172a',color:'#93c5fd',
+                       border:'1px solid #1e3a5f',borderRadius:4,padding:'2px 7px',cursor:'pointer'},
+                onClick:function(){props.onSelect(w);setOpen(false);},
+              },w);
+            })
+          )
+        );
+      }),
+      React.createElement('div',{style:{textAlign:'right',marginTop:6}},
+        React.createElement('button',{style:{fontSize:10,color:'#475569',background:'none',border:'none',cursor:'pointer'},onClick:function(){setOpen(false);}},'닫기 ✕')
+      )
+    )
+  );
+}
+
+function GlossaryModal(props){
+  var terms=[
+    {term:'정미작업',sub:'Value-Added',color:'#22c55e',icon:'✅',easy:'실제 작업',
+     desc:'제품의 가치를 직접 높이는 동작입니다. 고객이 돈을 내는 이유가 바로 이 작업들 때문입니다.',
+     ex:'나사 조이기, 부품 조립하기, 용접하기'},
+    {term:'부수작업',sub:'Auxiliary',color:'#f59e0b',icon:'🔧',easy:'준비 작업',
+     desc:'직접 가치는 없지만 정미작업을 하기 위해 반드시 필요한 준비 동작입니다.',
+     ex:'부품 꺼내기, 박스 열기, 공구 집기'},
+    {term:'낭비',sub:'Waste / Muda',color:'#ef4444',icon:'❌',easy:'낭비 동작',
+     desc:'없애야 할 동작입니다. 줄이거나 없애면 그만큼 생산성이 올라갑니다.',
+     ex:'불필요한 대기, 먼 거리 걸기, 부품 찾기, 재작업'},
+    {term:'택트타임 (T/T)',sub:'Takt Time',color:'#60a5fa',icon:'⏱',easy:'목표 생산 속도',
+     desc:'제품 1개를 만드는 데 허용되는 시간입니다. 하루 생산 목표로 계산합니다.',
+     ex:'하루 480분 가동, 목표 480개 → T/T = 1분 (60초)'},
+    {term:'CoV% (변동계수)',sub:'Coefficient of Variation',color:'#a78bfa',icon:'📉',easy:'작업 안정도',
+     desc:'매번 작업 시간이 얼마나 들쾽낙날쾽한지 보여줍니다. 낙을수록 숙련된 상태입니다.',
+     ex:'CoV 5% = 매우 안정 / CoV 30% = 매번 크게 달라집'},
+    {term:'레이팅계수',sub:'Rating Factor',color:'#a78bfa',icon:'⚡',easy:'작업자 속도 보정',
+     desc:'관측한 작업자가 보통 사람 대비 얼마나 빠른지/느린지 나타냅니다. 보통 사람 = 100%',
+     ex:'110% = 보통보다 10% 빠른 사람 / 90% = 10% 느린 사람'},
+    {term:'여유율',sub:'Allowance Rate',color:'#a78bfa',icon:'🛋',easy:'휴식 시간 비율',
+     desc:'피로, 화장실, 예상치 못한 지연 등을 위해 추가해주는 시간 비율입니다.',
+     ex:'15% 여유율 = 순수 작업시간에 15%를 더해 표준시간 계산'},
+    {term:'표준시간 (ST)',sub:'Standard Time',color:'#34d399',icon:'📋',easy:'기준 작업 시간',
+     desc:'관측시간에 레이팅계수와 여유율을 적용해 계산한 공식 작업 시간입니다.',
+     ex:'관측 10초 × 레이팅 100% × (1 + 여유율 15%) = 11.5초'},
+    {term:'편성효율',sub:'Line Efficiency',color:'#34d399',icon:'📊',easy:'작업자들의 균형 점수',
+     desc:'모든 작업자가 얼마나 균등하게 일하는지 보여줍니다. 100%에 가까울수록 좋습니다.',
+     ex:'80% = 어떤 작업자는 20%는 쉬고 있다는 의미'},
+    {term:'야마즈미 차트',sub:'Yamazumi Chart',color:'#60a5fa',icon:'📊',easy:'작업 배분 그래프',
+     desc:'각 작업자가 얼마나 일하는지 막대그래프로 보여줍니다. 빨간 선(T/T)을 넘으면 안 됩니다.',
+     ex:'막대가 빨간 선보다 낙으면 OK / 넘으면 과부하'},
+  ];
+  var _ss=React.useState(''); var search=_ss[0],setSearch=_ss[1];
+  var filtered=search?terms.filter(function(t){return t.term.indexOf(search)>=0||t.easy.indexOf(search)>=0||t.desc.indexOf(search)>=0;}):terms;
+  return React.createElement('div',{
+    style:{position:'fixed',inset:0,zIndex:9990,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'flex-start',justifyContent:'center',paddingTop:60,overflowY:'auto'},
+    onClick:props.onClose,
+  },
+    React.createElement('div',{
+      style:{background:'#1e293b',border:'1px solid #334155',borderRadius:16,padding:'24px',width:600,maxWidth:'95vw',boxShadow:'0 20px 60px rgba(0,0,0,0.6)',marginBottom:40},
+      onClick:function(e){e.stopPropagation();},
+    },
+      React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}},
+        React.createElement('h2',{style:{margin:0,fontSize:17,fontWeight:700,color:'#f1f5f9'}},'📚 IE 용어 사전'),
+        React.createElement('button',{style:{background:'none',border:'none',color:'#64748b',fontSize:20,cursor:'pointer'},onClick:props.onClose},'×')
+      ),
+      React.createElement('input',{
+        type:'text',value:search,onChange:function(e){setSearch(e.target.value);},
+        placeholder:'용어 검색...',
+        style:{width:'100%',background:'#0f172a',border:'1px solid #334155',borderRadius:8,padding:'8px 12px',color:'#e2e8f0',fontSize:13,boxSizing:'border-box',marginBottom:14,outline:'none'},
+      }),
+      filtered.map(function(t){
+        return React.createElement('div',{key:t.term,
+          style:{background:'#0f172a',border:'1px solid #1e3a5f',borderRadius:10,padding:'12px 14px',marginBottom:10,borderLeft:'3px solid '+t.color}
+        },
+          React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:5,flexWrap:'wrap'}},
+            React.createElement('span',{style:{fontSize:18}},t.icon),
+            React.createElement('span',{style:{fontWeight:700,color:'#f1f5f9',fontSize:14}},t.term),
+            React.createElement('span',{style:{color:'#64748b',fontSize:11}},t.sub),
+            React.createElement('span',{style:{background:t.color+'22',color:t.color,border:'1px solid '+t.color+'44',borderRadius:20,padding:'2px 10px',fontSize:11,fontWeight:700,marginLeft:'auto'}},'≙ '+t.easy)
+          ),
+          React.createElement('p',{style:{margin:'0 0 4px 0',fontSize:12,color:'#cbd5e1',lineHeight:'1.7'}},t.desc),
+          React.createElement('p',{style:{margin:0,fontSize:11,color:'#64748b'}},React.createElement('strong',{style:{color:'#94a3b8'}},'예시: '),t.ex)
+        );
+      })
+    )
+  );
+}
+
+// ─── IE Terminology Tooltip ────────────────────────────────────
+var IE_GLOSSARY={
+  '병목 표준시간':{full:'병목 공정 표준시간(Bottleneck ST)',desc:'가장 부하가 높은 공정의 ST. 이 공정이 라인 전체 속도를 결정합니다.'},
+  '라인 편성효율':{full:'라인 편성효율(LOB, Line Of Balance)',desc:'∑공정ST ÷ (작업자수 × T/T) × 100%. 100%에 가까울수록 균형 잡힌 라인.'},
+  '택트타임':{full:'택트타임(T/T, Takt Time)',desc:'제품 1개를 생산해야 하는 목표 주기시간. = 가동시간 ÷ 요구수량.'},
+  '표준시간':{full:'표준시간(ST, Standard Time)',desc:'정미시간 × 레이팅계수 × (1+여유율). 규정된 방법으로 작업 완료에 필요한 기준 시간.'},
+  '정미작업':{full:'정미작업(Value-Added Work)',desc:'제품 가치를 직접 높이는 부가가치 작업. 조립·가공·검사 등.'},
+  '낙비':{full:'낙비(Muda, 낙비)',desc:'가치를 창출하지 않는 모든 활동. 7대낙비: 운반·재고·동작·대기·과잌생산·과잌가공·불량.'},
+  '낙비(낙비)':{full:'낙비(Muda)',desc:'가치를 창출하지 않는 모든 활동. 7대낙비: 운반·재고·동작·대기·과잌생산·과잌가공·불량.'},
+  '변동계수':{full:'변동계수(CV, Coefficient of Variation)',desc:'표준편차 ÷ 평균 × 100. 사이클타임 안정성 지표. 낙을수록 작업이 균일함.'},
+  '레이팅계수':{full:'레이팅계수(R/F, Rating Factor)',desc:'관측된 작업 속도를 표준 속도로 환산하는 계수. 100%가 정상 속도.'},
+  '여유율':{full:'여유율(Allowance Rate)',desc:'피로·개인용무·대기 등 불가피한 시간을 정미시간에 추가하는 비율. 보통 10~20%.'},
+  '야마즈미':{full:'야마즈미 차트(Yamazumi Chart)',desc:'공정별 작업시간을 쓈아 시각화한 막대 차트. 불균형과 낙비를 한눈에 파악.'},
+  '사이클타임':{full:'사이클타임(CT, Cycle Time)',desc:'실제 측정된 작업 반복 주기. 제품 1개를 완성하는 실측 시간.'},
+  '부수작업':{full:'부수작업(Auxiliary Work)',desc:'정미작업을 위한 준비·후처리 작업. 가치는 낙지만 필요한 작업.'},
+};
+function IETip(props){
+  var term=props.term;var children=props.children;
+  var _s=useState(false);var show=_s[0],setShow=_s[1];
+  var g=IE_GLOSSARY[term];
+  var inner=children||React.createElement('span',null,term);
+  if(!g)return inner;
+  return React.createElement('span',{
+    style:{position:'relative',display:'inline-block',cursor:'help',borderBottom:'1px dotted #475569'},
+    onMouseEnter:function(){setShow(true);},
+    onMouseLeave:function(){setShow(false);},
+  },
+    inner,
+    show&&React.createElement('div',{style:{
+      position:'absolute',bottom:'calc(100% + 6px)',left:'50%',transform:'translateX(-50%)',
+      background:'#0f172a',color:'#e2e8f0',padding:'10px 14px',borderRadius:10,
+      fontSize:11,width:240,zIndex:9999,boxShadow:'0 8px 32px rgba(0,0,0,0.6)',
+      border:'1px solid #334155',whiteSpace:'normal',lineHeight:1.6,pointerEvents:'none',
+    }},
+      React.createElement('div',{style:{color:'#f59e0b',fontWeight:700,marginBottom:4}},g.full),
+      React.createElement('div',{style:{color:'#94a3b8'}},g.desc),
+      React.createElement('div',{style:{
+        position:'absolute',bottom:-6,left:'50%',transform:'translateX(-50%)',
+        borderLeft:'6px solid transparent',borderRight:'6px solid transparent',
+        borderTop:'6px solid #334155',
+      }})
+    )
+  );
+}
+
+// ─── LOB Rebalancing Workspace ──────────────────────────────────
+function RebalanceWorkspace(props){
+  var procs=props.procs;var takt=props.takt;var rebalMoves=props.rebalMoves;
+  var setRebalMoves=props.setRebalMoves;var getWorkers=props.getWorkers;var stats=props.stats;
+  var PROC_COLORS=['#3b82f6','#a855f7','#ec4899','#f97316','#22c55e','#06b6d4','#f43f5e','#eab308'];
+  var allEntries=[];
+  procs.forEach(function(src,si){
+    (src.tasks||[]).forEach(function(t){
+      var rf=(src.ratingFactor||100)/100;
+      var ar=1+(src.allowanceRate||15)/100;
+      var eid=src.id+'__'+encodeURIComponent(t.name||'task')+'__'+si;
+      var curProcId=rebalMoves[eid]||src.id;
+      allEntries.push({
+        id:eid,name:t.name||(t.type==='waste'?'대기':'작업'),
+        time:t.duration*rf*ar,curProcId:curProcId,origProcId:src.id,
+        origColor:PROC_COLORS[si%PROC_COLORS.length],isMoved:!!rebalMoves[eid],
+      });
+    });
+  });
+  function getEntriesForProc(pid){return allEntries.filter(function(e){return e.curProcId===pid;});}
+  var totalST=allEntries.reduce(function(s,e){return s+e.time;},0);
+  var totalW=procs.reduce(function(s,p){return s+getWorkers(p.id);},0);
+  var lobEff=takt>0?Math.round(totalST/(totalW*takt)*100):0;
+  var origEff=stats?stats.lineEff:0;
+  return React.createElement('div',{style:{background:'#0f172a',borderRadius:10,padding:14,marginBottom:14}},
+    React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:12,flexWrap:'wrap'}},
+      React.createElement('div',{style:{fontSize:12,fontWeight:700,color:'#94a3b8'}},'🏗️ LOB 재편성 시밀레이터'),
+      React.createElement('div',{style:{fontSize:11,color:'#475569'}},'작업 칩을 다른 공정으로 드래그하여 LOB 변화 확인'),
+      React.createElement('button',{
+        onClick:function(){setRebalMoves({});},
+        style:{marginLeft:'auto',background:'#1e293b',color:'#94a3b8',border:'1px solid #334155',
+               borderRadius:6,padding:'3px 10px',fontSize:10,cursor:'pointer'}
+      },'↺ 초기화')
+    ),
+    React.createElement('div',{style:{display:'flex',gap:6,overflowX:'auto',paddingBottom:6}},
+      procs.map(function(p,pi){
+        var color=PROC_COLORS[pi%PROC_COLORS.length];
+        var entries=getEntriesForProc(p.id);
+        var load=entries.reduce(function(s,e){return s+e.time;},0);
+        var workers=getWorkers(p.id);
+        var eff=takt>0?Math.min(120,Math.round(load/workers/takt*100)):0;
+        var ec=eff>100?'#ef4444':eff>=80?'#22c55e':eff>=60?'#f59e0b':'#64748b';
+        return React.createElement('div',{
+          key:p.id,
+          style:{minWidth:130,flex:'1 1 130px',background:'#1e293b',borderRadius:8,border:'2px solid '+color+'44',
+                 transition:'border-color 0.15s',display:'flex',flexDirection:'column'},
+          onDragOver:function(e){e.preventDefault();e.currentTarget.style.borderColor=color;},
+          onDragLeave:function(e){e.currentTarget.style.borderColor=color+'44';},
+          onDrop:function(e){
+            e.preventDefault();e.currentTarget.style.borderColor=color+'44';
+            var eid=e.dataTransfer.getData('text/plain');
+            if(eid){setRebalMoves(function(prev){var n=Object.assign({},prev);n[eid]=p.id;return n;});}
+          },
+        },
+          React.createElement('div',{style:{padding:'6px 8px',borderBottom:'1px solid '+color+'33',background:color+'11'}},
+            React.createElement('div',{style:{fontSize:11,fontWeight:700,color:color}},(p.order||pi+1)+'. '+p.name),
+            React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:10,marginTop:2}},
+              React.createElement('span',{style:{color:'#64748b'}},load.toFixed(1)+'s / '+workers+'명'),
+              React.createElement('span',{style:{color:ec,fontWeight:700}},eff+'%')
+            ),
+            React.createElement('div',{style:{height:4,background:'#0f172a',borderRadius:2,marginTop:4,overflow:'hidden'}},
+              React.createElement('div',{style:{height:'100%',width:Math.min(100,eff)+'%',background:ec,borderRadius:2,transition:'width 0.3s'}})
+            )
+          ),
+          React.createElement('div',{style:{padding:4,flex:1,display:'flex',flexDirection:'column',gap:3,minHeight:50}},
+            entries.length===0
+              ?React.createElement('div',{style:{color:'#334155',fontSize:10,textAlign:'center',padding:'10px 0'}},'여기로 드래그')
+              :entries.map(function(e){
+                return React.createElement('div',{
+                  key:e.id,draggable:true,
+                  onDragStart:function(ev){ev.dataTransfer.setData('text/plain',e.id);},
+                  style:{background:e.isMoved?e.origColor+'22':'#0f172a',
+                         border:'1px solid '+(e.isMoved?e.origColor:'#334155'),
+                         borderRadius:4,padding:'3px 6px',fontSize:10,cursor:'grab',
+                         display:'flex',justifyContent:'space-between',gap:4,color:'#e2e8f0'},
+                },
+                  React.createElement('span',{style:{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1,minWidth:0}},e.name),
+                  React.createElement('span',{style:{color:'#64748b',flexShrink:0,fontSize:9}},e.time.toFixed(1)+'s')
+                );
+              })
+          )
+        );
+      })
+    ),
+    React.createElement('div',{style:{marginTop:8,padding:'8px 12px',background:'#1e293b',borderRadius:8,display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}},
+      React.createElement('span',{style:{fontSize:11,color:'#64748b'}},'재편성 후 LOB:'),
+      React.createElement('span',{style:{fontSize:18,fontWeight:700,color:lobEff>=80?'#22c55e':lobEff>=60?'#f59e0b':'#ef4444'}},lobEff+'%'),
+      React.createElement('span',{style:{fontSize:11,fontWeight:700,color:lobEff-origEff>=0?'#22c55e':'#ef4444'}},
+        (lobEff-origEff>=0?'▲ +':'▼ ')+Math.abs(lobEff-origEff)+'% (원래 '+origEff+'%)'
+      ),
+      Object.keys(rebalMoves).length>0&&React.createElement('span',{style:{fontSize:10,color:'#f59e0b'}},
+        Object.keys(rebalMoves).length+'건 이동됨'
+      )
+    )
+  );
+}
+
+// ─── Segment Compare Modal (낭비 비교 / 사이클 비교) ──────────────────
+function SegmentCompareModal({videoSrc,tasks,initialTab,lang,onClose}){
+  var s=STRINGS[lang]||STRINGS.ko;
+  var _tab=useState(initialTab||'waste'); var activeTab=_tab[0],setActiveTab=_tab[1];
+  var leftRef=useRef(null),rightRef=useRef(null),rafRef=useRef(null);
+  var _lt=useState(0);var leftTime=_lt[0],setLeftTime=_lt[1];
+  var _rt=useState(0);var rightTime=_rt[0],setRightTime=_rt[1];
+  var _ld=useState(0);var leftDur=_ld[0],setLeftDur=_ld[1];
+  var _rd=useState(0);var rightDur=_rd[0],setRightDur=_rd[1];
+  var _pl=useState(false);var playing=_pl[0],setPlaying=_pl[1];
+  var _sp=useState(0.5);var speed=_sp[0],setSpeed=_sp[1];
+  var _lp=useState(true);var loopSeg=_lp[0],setLoopSeg=_lp[1];
+  var _ls=useState(0);var leftStart=_ls[0],setLeftStart=_ls[1];
+  var _le=useState(999);var leftEnd=_le[0],setLeftEnd=_le[1];
+  var _rs=useState(0);var rightStart=_rs[0],setRightStart=_rs[1];
+  var _re=useState(999);var rightEnd=_re[0],setRightEnd=_re[1];
+  var _rightEmpty=useState(false);var rightEmpty=_rightEmpty[0],setRightEmpty=_rightEmpty[1];
+  var _wi=useState(0);var wasteSelIdx=_wi[0],setWasteSelIdx=_wi[1];
+  var _wii=useState(0);var wasteInstIdx=_wii[0],setWasteInstIdx=_wii[1];
+  var _cii=useState(0);var cleanInstIdx=_cii[0],setCleanInstIdx=_cii[1];
+
+  // ── Waste groups ──────────────────────────────────────────
+  var wasteGroups=useMemo(function(){
+    var map={};
+    tasks.forEach(function(t){
+      if(!map[t.name])map[t.name]={waste:[],clean:[]};
+      if(t.type==='waste')map[t.name].waste.push(t);
+      else map[t.name].clean.push(t);
+    });
+    var result=[];
+    Object.keys(map).forEach(function(name){
+      if(map[name].waste.length>0)result.push({name:name,waste:map[name].waste,clean:map[name].clean});
+    });
+    result.sort(function(a,b){return a.name.localeCompare(b.name);});
+    return result;
+  },[tasks]);
+
+  // ── Cycle stats ───────────────────────────────────────────
+  var cycleStats=useMemo(function(){
+    var map={};
+    tasks.forEach(function(t){
+      var c=t.cycle||1;
+      if(!map[c])map[c]={tasks:[],total:0,starts:[],ends:[]};
+      map[c].tasks.push(t);
+      map[c].total+=t.duration||0;
+      if(t.startTime>=0)map[c].starts.push(t.startTime);
+      if(t.endTime>0)map[c].ends.push(t.endTime);
+    });
+    var arr=Object.keys(map).map(function(c){
+      var m=map[c];
+      return{cycle:parseInt(c),total:m.total,
+             startTime:m.starts.length?Math.min.apply(null,m.starts):0,
+             endTime:m.ends.length?Math.max.apply(null,m.ends):0};
+    }).filter(function(c){return c.total>0;});
+    if(arr.length<2)return null;
+    arr.sort(function(a,b){return a.total-b.total;});
+    return{fastest:arr[0],slowest:arr[arr.length-1],all:arr};
+  },[tasks]);
+
+  // ── Apply selection → set segment bounds ──────────────────
+  useEffect(function(){
+    var lv=leftRef.current,rv=rightRef.current;
+    if(activeTab==='waste'){
+      var grp=wasteGroups[wasteSelIdx];
+      if(!grp){return;}
+      var wt=grp.waste[wasteInstIdx]||grp.waste[0];
+      var ct=grp.clean[cleanInstIdx]||grp.clean[0]||null;
+      if(wt){setLeftStart(wt.startTime);setLeftEnd(wt.endTime);if(lv)lv.currentTime=wt.startTime;}
+      setRightEmpty(!ct);
+      if(ct){setRightStart(ct.startTime);setRightEnd(ct.endTime);if(rv)rv.currentTime=ct.startTime;}
+      else{setRightStart(0);setRightEnd(0);}
+    } else {
+      if(!cycleStats){return;}
+      var fast=cycleStats.fastest,slow=cycleStats.slowest;
+      setLeftStart(fast.startTime);setLeftEnd(fast.endTime);
+      setRightStart(slow.startTime);setRightEnd(slow.endTime);
+      setRightEmpty(false);
+      if(lv)lv.currentTime=fast.startTime;
+      if(rv)rv.currentTime=slow.startTime;
+    }
+    setPlaying(false);
+  },[activeTab,wasteSelIdx,wasteInstIdx,cleanInstIdx,cycleStats,wasteGroups]);
+
+  // ── RAF: time tracking + loop ─────────────────────────────
+  useEffect(function(){
+    function tick(){
+      var lv=leftRef.current,rv=rightRef.current;
+      if(lv){
+        var lt=lv.currentTime;
+        setLeftTime(lt);
+        if(loopSeg&&!lv.paused&&leftEnd>leftStart&&lt>=leftEnd-0.08){
+          lv.currentTime=leftStart;
+          if(rv&&!rightEmpty)rv.currentTime=rightStart;
+        }
+      }
+      if(rv)setRightTime(rv.currentTime);
+      rafRef.current=requestAnimationFrame(tick);
+    }
+    rafRef.current=requestAnimationFrame(tick);
+    return function(){cancelAnimationFrame(rafRef.current);};
+  },[loopSeg,leftStart,leftEnd,rightStart,rightEmpty]);
+
+  // ── Playback controls ─────────────────────────────────────
+  function doPlay(){
+    var lv=leftRef.current,rv=rightRef.current;
+    if(!lv)return;
+    lv.currentTime=leftStart;lv.playbackRate=speed;
+    var p=[lv.play()];
+    if(rv&&!rightEmpty){rv.currentTime=rightStart;rv.playbackRate=speed;p.push(rv.play());}
+    Promise.all(p).catch(function(){});
+    setPlaying(true);
+  }
+  function doPause(){
+    var lv=leftRef.current,rv=rightRef.current;
+    if(lv)lv.pause();if(rv)rv.pause();setPlaying(false);
+  }
+  function togglePlay(){if(playing)doPause();else doPlay();}
+  function stepL(d){doPause();var lv=leftRef.current;if(lv)lv.currentTime=Math.max(leftStart,lv.currentTime+d/30);}
+  function stepR(d){doPause();var rv=rightRef.current;if(rv)rv.currentTime=Math.max(rightStart,rv.currentTime+d/30);}
+  function seekLeft(e){var lv=leftRef.current;if(!lv||!leftDur)return;var r=e.currentTarget.getBoundingClientRect();lv.currentTime=Math.max(0,Math.min(leftDur,((e.clientX-r.left)/r.width)*leftDur));}
+  function seekRight(e){var rv=rightRef.current;if(!rv||!rightDur)return;var r=e.currentTarget.getBoundingClientRect();rv.currentTime=Math.max(0,Math.min(rightDur,((e.clientX-r.left)/r.width)*rightDur));}
+
+  useEffect(function(){
+    function onKey(e){
+      if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;
+      if(e.key===' '){e.preventDefault();togglePlay();}
+      else if(e.key==='ArrowLeft'){e.preventDefault();stepL(-1);stepR(-1);}
+      else if(e.key==='ArrowRight'){e.preventDefault();stepL(1);stepR(1);}
+      else if(e.key==='Escape')onClose();
+    }
+    document.addEventListener('keydown',onKey);
+    return function(){document.removeEventListener('keydown',onKey);};
+  },[playing,speed,leftStart,rightStart,rightEmpty]);
+
+  function fmtT(t){var m=Math.floor(t/60),s=Math.floor(t%60),ms=Math.round((t%1)*100);return m+':'+(s<10?'0'+s:s)+'.'+(ms<10?'0'+ms:ms);}
+  function fmtD(t){return t!=null?t.toFixed(1)+'s':'—';}
+
+  if(!videoSrc) return React.createElement('div',{style:{position:'fixed',inset:0,zIndex:3100,background:'rgba(0,0,0,.85)',display:'flex',alignItems:'center',justifyContent:'center'}},
+    React.createElement('div',{style:{background:'#1e293b',borderRadius:12,padding:32,textAlign:'center',color:'#94a3b8',maxWidth:360}},
+      React.createElement('div',{style:{fontSize:36,marginBottom:12}},'🎬'),
+      React.createElement('div',{style:{marginBottom:8,color:'#e2e8f0',fontWeight:700}},'영상이 없습니다'),
+      React.createElement('div',{style:{fontSize:12,color:'#64748b',marginBottom:20}},'분석 탭에서 영상을 먼저 불러온 후 실행해주세요.'),
+      React.createElement('button',{onClick:onClose,style:{background:'#334155',color:'#94a3b8',border:'none',borderRadius:8,padding:'8px 20px',cursor:'pointer'}},'닫기')
+    )
+  );
+
+  var hasWaste=wasteGroups.length>0;
+  var hasCycle=!!cycleStats;
+  var selGrp=wasteGroups[wasteSelIdx]||null;
+  var curWasteTask=selGrp?(selGrp.waste[wasteInstIdx]||selGrp.waste[0]):null;
+  var curCleanTask=selGrp?(selGrp.clean[cleanInstIdx]||selGrp.clean[0]||null):null;
+  var BTN={background:'#1e293b',color:'#94a3b8',border:'1px solid #334155',borderRadius:6,cursor:'pointer'};
+
+  // Tab content: top info bar
+  function WasteInfo(){
+    if(!hasWaste) return React.createElement('div',{style:{padding:'6px 12px',color:'#f87171',fontSize:12,fontWeight:700}},
+      '✅ 낭비 작업이 없습니다 — 모든 작업이 정미 또는 부수 작업입니다.');
+    var grp=wasteGroups[wasteSelIdx]||wasteGroups[0];
+    return React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',padding:'4px 0'}},
+      React.createElement('span',{style:{fontSize:11,color:'#fca5a5',fontWeight:700,whiteSpace:'nowrap'}},'낭비 작업:'),
+      React.createElement('select',{value:wasteSelIdx,
+        onChange:function(e){setWasteSelIdx(parseInt(e.target.value));setWasteInstIdx(0);setCleanInstIdx(0);},
+        style:{background:'#7f1d1d',color:'#fecaca',border:'1px solid #991b1b',borderRadius:4,padding:'2px 6px',fontSize:11}},
+        wasteGroups.map(function(g,i){return React.createElement('option',{key:g.name,value:i},g.name);})),
+      React.createElement('span',{style:{fontSize:10,color:'#64748b'}},'낭비 발생:'),
+      React.createElement('select',{value:wasteInstIdx,
+        onChange:function(e){setWasteInstIdx(parseInt(e.target.value));},
+        style:{background:'#7f1d1d',color:'#fecaca',border:'1px solid #991b1b',borderRadius:4,padding:'2px 6px',fontSize:11}},
+        (selGrp?selGrp.waste:[]).map(function(t,i){return React.createElement('option',{key:i,value:i},'사이클 '+(t.cycle||1)+' ('+t.duration.toFixed(1)+'s)');})),
+      selGrp&&selGrp.clean.length>0&&React.createElement(React.Fragment,null,
+        React.createElement('span',{style:{fontSize:10,color:'#64748b'}},'정상 사이클:'),
+        React.createElement('select',{value:cleanInstIdx,
+          onChange:function(e){setCleanInstIdx(parseInt(e.target.value));},
+          style:{background:'#052e16',color:'#86efac',border:'1px solid #166534',borderRadius:4,padding:'2px 6px',fontSize:11}},
+          (selGrp?selGrp.clean:[]).map(function(t,i){return React.createElement('option',{key:i,value:i},'사이클 '+(t.cycle||1)+' ('+t.duration.toFixed(1)+'s)');}))
+      ),
+      selGrp&&selGrp.clean.length===0&&React.createElement('span',{style:{fontSize:11,color:'#94a3b8'}},'(정상 사이클 없음 — 해당 작업이 항상 낭비)')
+    );
+  }
+  function CycleInfo(){
+    if(!hasCycle) return React.createElement('div',{style:{padding:'6px 12px',color:'#94a3b8',fontSize:12}},
+      '⚠️ 사이클이 2개 이상 필요합니다. 현재 사이클 수: '+(cycleStats?0:tasks.filter(function(t){return t.cycle;}).reduce(function(s,t){return Math.max(s,t.cycle||1);},1))+'개');
+    var fast=cycleStats.fastest,slow=cycleStats.slowest;
+    return React.createElement('div',{style:{display:'flex',alignItems:'center',gap:16,padding:'4px 0',flexWrap:'wrap'}},
+      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6}},
+        React.createElement('span',{style:{fontSize:11,fontWeight:700,color:'#22c55e'}},'⚡ 최속 사이클'),
+        React.createElement('span',{style:{fontSize:13,fontWeight:800,color:'#4ade80',background:'#052e16',padding:'2px 8px',borderRadius:4}},'#'+fast.cycle),
+        React.createElement('span',{style:{fontSize:11,color:'#4ade80'}},'총 '+fmtD(fast.total))
+      ),
+      React.createElement('span',{style:{fontSize:16,color:'#334155'}},'vs'),
+      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6}},
+        React.createElement('span',{style:{fontSize:11,fontWeight:700,color:'#ef4444'}},'🐢 최저 사이클'),
+        React.createElement('span',{style:{fontSize:13,fontWeight:800,color:'#fca5a5',background:'#450a0a',padding:'2px 8px',borderRadius:4}},'#'+slow.cycle),
+        React.createElement('span',{style:{fontSize:11,color:'#fca5a5'}},'총 '+fmtD(slow.total))
+      ),
+      React.createElement('span',{style:{fontSize:11,color:'#64748b'}},'차이: '+fmtD(slow.total-fast.total)+
+        ' ('+Math.round((slow.total-fast.total)/fast.total*100)+'%)')
+    );
+  }
+
+  // Left/Right panel header styles
+  var leftPanelBg = activeTab==='waste'?'#450a0a':'#052e16';
+  var leftBorder  = activeTab==='waste'?'#dc2626':'#16a34a';
+  var leftColor   = activeTab==='waste'?'#fca5a5':'#4ade80';
+  var leftLabel   = activeTab==='waste'
+    ? '🔴 낭비 구간'+(curWasteTask?' — '+curWasteTask.duration.toFixed(1)+'s':'')
+    : '⚡ 최속 사이클'+(cycleStats?' #'+cycleStats.fastest.cycle+' ('+cycleStats.fastest.total.toFixed(1)+'s)':'');
+  var rightPanelBg = activeTab==='waste'?'#052e16':'#450a0a';
+  var rightBorder  = activeTab==='waste'?'#16a34a':'#dc2626';
+  var rightColor   = activeTab==='waste'?'#4ade80':'#fca5a5';
+  var rightLabel   = activeTab==='waste'
+    ? (rightEmpty?'정상 사이클 없음':'✅ 정상 사이클'+(curCleanTask?' — '+curCleanTask.duration.toFixed(1)+'s':''))
+    : ('🐢 최저 사이클'+(cycleStats?' #'+cycleStats.slowest.cycle+' ('+cycleStats.slowest.total.toFixed(1)+'s)':''));
+
+  var showCtrls = activeTab==='cycle'?hasCycle:(hasWaste);
+
+  return React.createElement('div',{style:{position:'fixed',inset:0,zIndex:3100,background:'#000',display:'flex',flexDirection:'column'}},
+
+    // ── Top bar ──
+    React.createElement('div',{style:{display:'flex',alignItems:'center',padding:'6px 12px',background:'#0f172a',borderBottom:'1px solid #1e293b',gap:8,flexShrink:0,flexWrap:'wrap'}},
+      // Tabs
+      React.createElement('div',{style:{display:'flex',gap:2,background:'#1e293b',borderRadius:8,padding:2}},
+        React.createElement('button',{
+          onClick:function(){setActiveTab('waste');setPlaying(false);},
+          style:{padding:'4px 12px',borderRadius:6,border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
+                 background:activeTab==='waste'?'#7f1d1d':'transparent',
+                 color:activeTab==='waste'?'#fca5a5':'#64748b'}
+        },'🔴 낭비 구간 비교'),
+        React.createElement('button',{
+          onClick:function(){setActiveTab('cycle');setPlaying(false);},
+          style:{padding:'4px 12px',borderRadius:6,border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
+                 background:activeTab==='cycle'?'#1c1500':'transparent',
+                 color:activeTab==='cycle'?'#fde68a':'#64748b'}
+        },'⚡ 사이클 속도 비교')
+      ),
+      // Info area
+      React.createElement('div',{style:{flex:1,minWidth:0}},
+        activeTab==='waste'?WasteInfo():CycleInfo()
+      ),
+      // Speed + Close
+      React.createElement('div',{style:{display:'flex',gap:4,alignItems:'center',flexShrink:0}},
+        React.createElement('span',{style:{fontSize:10,color:'#64748b'}},'속도:'),
+        [0.25,0.5,1,1.5,2].map(function(sp){
+          return React.createElement('button',{key:sp,
+            style:{background:speed===sp?'#1d4ed8':'#1e293b',color:speed===sp?'#93c5fd':'#64748b',
+                   border:'1px solid '+(speed===sp?'#3b82f6':'#334155'),borderRadius:4,padding:'2px 6px',fontSize:11,cursor:'pointer'},
+            onClick:function(){setSpeed(sp);var lv=leftRef.current,rv=rightRef.current;if(lv)lv.playbackRate=sp;if(rv)rv.playbackRate=sp;}
+          },sp+'x');
+        }),
+        React.createElement('button',{
+          onClick:function(){setLoopSeg(!loopSeg);},
+          style:{background:loopSeg?'#1e3a8a':'#1e293b',color:loopSeg?'#93c5fd':'#64748b',
+                 border:'1px solid '+(loopSeg?'#3b82f6':'#334155'),borderRadius:4,padding:'2px 8px',fontSize:11,cursor:'pointer'},
+        },'🔁 구간반복'),
+        React.createElement('span',{style:{fontSize:10,color:'#475569'}},'Space=재생  ←→=프레임  Esc=닫기'),
+        React.createElement('button',{onClick:onClose,
+          style:{background:'#1e293b',color:'#94a3b8',border:'1px solid #334155',borderRadius:6,padding:'4px 10px',fontSize:11,cursor:'pointer',marginLeft:4}
+        },'✕ 닫기')
+      )
+    ),
+
+    // ── Video panels ──
+    React.createElement('div',{style:{display:'flex',flex:1,overflow:'hidden',minHeight:0,gap:2}},
+
+      // LEFT PANEL
+      React.createElement('div',{style:{flex:1,display:'flex',flexDirection:'column',background:'#000',minWidth:0}},
+        React.createElement('div',{style:{padding:'4px 8px',background:leftPanelBg,display:'flex',alignItems:'center',gap:6,flexShrink:0,borderBottom:'2px solid '+leftBorder}},
+          React.createElement('span',{style:{fontSize:12,fontWeight:700,color:leftColor,whiteSpace:'nowrap'}},leftLabel),
+          React.createElement('span',{style:{marginLeft:'auto',fontSize:11,color:leftColor,fontFamily:'monospace'}},fmtT(leftTime))
+        ),
+        React.createElement('video',{ref:leftRef,src:videoSrc||'',
+          style:{flex:1,width:'100%',objectFit:'contain',background:'#000'},
+          onLoadedMetadata:function(e){setLeftDur(e.target.duration);}}),
+        React.createElement('div',{style:{height:6,background:'#1e293b',cursor:'pointer',flexShrink:0,position:'relative'},onClick:seekLeft},
+          React.createElement('div',{style:{height:'100%',background:leftBorder,width:leftDur>0?((leftTime/leftDur)*100)+'%':'0%',transition:'width 0.08s linear',pointerEvents:'none'}}),
+          leftDur>0&&leftEnd>0&&React.createElement('div',{style:{position:'absolute',top:0,bottom:0,left:((leftStart/leftDur)*100)+'%',right:((1-leftEnd/leftDur)*100)+'%',background:leftColor,opacity:0.25,pointerEvents:'none'}}),
+          leftDur>0&&React.createElement('div',{style:{position:'absolute',top:-1,bottom:-1,left:((leftStart/leftDur)*100)+'%',width:2,background:leftColor,pointerEvents:'none'}})
+        )
+      ),
+
+      // RIGHT PANEL
+      React.createElement('div',{style:{flex:1,display:'flex',flexDirection:'column',background:rightEmpty?'#0f172a':'#000',minWidth:0}},
+        React.createElement('div',{style:{padding:'4px 8px',background:rightPanelBg,display:'flex',alignItems:'center',gap:6,flexShrink:0,borderBottom:'2px solid '+rightBorder}},
+          React.createElement('span',{style:{fontSize:12,fontWeight:700,color:rightColor,whiteSpace:'nowrap'}},rightLabel),
+          !rightEmpty&&React.createElement('span',{style:{marginLeft:'auto',fontSize:11,color:rightColor,fontFamily:'monospace'}},fmtT(rightTime))
+        ),
+        rightEmpty
+          ?React.createElement('div',{style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,color:'#475569'}},
+              React.createElement('div',{style:{fontSize:40}},'🔍'),
+              React.createElement('div',{style:{fontSize:13,color:'#94a3b8',fontWeight:600}},'정상 사이클 없음'),
+              React.createElement('div',{style:{fontSize:11,color:'#475569',textAlign:'center',maxWidth:280}},
+                '이 작업은 모든 사이클에서 낭비로 분류되었습니다.\n정상(정미/부수) 사이클이 없어 비교가 불가합니다.')
+            )
+          :React.createElement('video',{ref:rightRef,src:videoSrc||'',
+              style:{flex:1,width:'100%',objectFit:'contain',background:'#000'},
+              onLoadedMetadata:function(e){setRightDur(e.target.duration);}}),
+        !rightEmpty&&React.createElement('div',{style:{height:6,background:'#1e293b',cursor:'pointer',flexShrink:0,position:'relative'},onClick:seekRight},
+          React.createElement('div',{style:{height:'100%',background:rightBorder,width:rightDur>0?((rightTime/rightDur)*100)+'%':'0%',transition:'width 0.08s linear',pointerEvents:'none'}}),
+          rightDur>0&&rightEnd>0&&React.createElement('div',{style:{position:'absolute',top:0,bottom:0,left:((rightStart/rightDur)*100)+'%',right:((1-rightEnd/rightDur)*100)+'%',background:rightColor,opacity:0.25,pointerEvents:'none'}}),
+          rightDur>0&&React.createElement('div',{style:{position:'absolute',top:-1,bottom:-1,left:((rightStart/rightDur)*100)+'%',width:2,background:rightColor,pointerEvents:'none'}})
+        )
+      )
+    ),
+
+    // ── Bottom controls ──
+    showCtrls&&React.createElement('div',{style:{padding:'8px 16px',background:'#0f172a',borderTop:'1px solid #1e293b',display:'flex',alignItems:'center',justifyContent:'center',gap:10,flexShrink:0}},
+      React.createElement('button',{onClick:function(){stepL(-1);stepR(-1);},title:'1프레임 이전 (←)',
+        style:Object.assign({},BTN,{padding:'6px 12px',fontSize:14})},'◄◄'),
+      React.createElement('button',{
+        onClick:function(){doPause();var lv=leftRef.current,rv=rightRef.current;if(lv)lv.currentTime=leftStart;if(rv&&!rightEmpty)rv.currentTime=rightStart;},
+        style:Object.assign({},BTN,{padding:'6px 12px',fontSize:12,whiteSpace:'nowrap'})
+      },'⏮ 구간 시작'),
+      React.createElement('button',{onClick:togglePlay,
+        style:{background:playing?'#991b1b':'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'8px 28px',fontSize:14,fontWeight:700,cursor:'pointer',minWidth:130}
+      },playing?'⏸ 일시정지':'▶ 재생'),
+      React.createElement('button',{
+        onClick:function(){doPause();var lv=leftRef.current,rv=rightRef.current;if(lv)lv.currentTime=Math.min(leftEnd,leftDur);if(rv&&!rightEmpty)rv.currentTime=Math.min(rightEnd,rightDur);},
+        style:Object.assign({},BTN,{padding:'6px 12px',fontSize:12,whiteSpace:'nowrap'})
+      },'구간 끝 ⏭'),
+      React.createElement('button',{onClick:function(){stepL(1);stepR(1);},title:'1프레임 다음 (→)',
+        style:Object.assign({},BTN,{padding:'6px 12px',fontSize:14})},'►►')
+    )
+  );
+}
+
+
+// ─── Video Compare Modal ─────────────────────────────────────────
 
 function VideoCompareModal(props){
   var onClose=props.onClose;
