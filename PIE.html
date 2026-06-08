@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
@@ -1272,6 +1272,7 @@ function getGasUrl() {
  * @returns {Promise<{ok: boolean, reason?: string}>}
  */
 async function syncToGoogleSheet(payload) {
+  if (!navigator.onLine) return { ok: false, reason: '오프라인 — 인터넷 연결 시 Google Sheets 동기화가 활성화됩니다.' };
   const url = getGasUrl();
   if (!url) return { ok: false, reason: 'GAS URL이 설정되지 않았습니다.' };
 
@@ -1863,6 +1864,7 @@ function SettingsModal({lang,setLang,onClose}){
   function testGas(){
     var url=gasUrl.trim();
     if(!url){alert('GAS URL을 먼저 입력하세요.');return;}
+    if(!navigator.onLine){alert('오프라인 상태입니다.\n인터넷 연결 후 다시 시도하세요.');return;}
     fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({date:'테스트',partName:'PIE_TEST',st:0,worker:'test',cycleNo:0,workPct:0,source:'PIE_TEST'})
     }).then(function(){setGasSaved(true);setTimeout(function(){setGasSaved(false);},2500);})
@@ -1911,7 +1913,12 @@ function SettingsModal({lang,setLang,onClose}){
       // ── Google Sheets 연동 설정 ───────────────────────────────────
       React.createElement('div',{style:{marginBottom:20,paddingTop:16,borderTop:'1px solid #334155'}},
         React.createElement('div',{style:{fontSize:12,fontWeight:700,color:'#94a3b8',marginBottom:6,display:'flex',alignItems:'center',gap:6}},
-          '📊 Google Sheets 연동 (선택)'),
+          '📊 Google Sheets 연동 (선택)',
+          React.createElement('span',{style:{fontSize:10,padding:'1px 7px',borderRadius:10,
+            background:navigator.onLine?'rgba(34,197,94,0.1)':'rgba(100,116,139,0.15)',
+            border:'1px solid '+(navigator.onLine?'rgba(74,222,128,0.4)':'#475569'),
+            color:navigator.onLine?'#4ade80':'#64748b'}},
+            navigator.onLine?'🌐 온라인':'📴 오프라인')),
         React.createElement('div',{style:{fontSize:11,color:'#475569',marginBottom:8,lineHeight:1.6}},
           'GAS 웹 앱 URL을 입력하면 분析 완료 시 자동으로 스프레드시트에 저장됩니다.'),
         React.createElement('div',{style:{display:'flex',gap:6}},
@@ -2107,7 +2114,7 @@ function LeftSidebar({tab,setTab,lang,beginnerMode,onCompare,onVision}){
     {key:'st',     icon:'⏱', label:s.side_st||'ST분析'},
     {key:'assign', icon:'📋', label:s.side_assign||'작업편성'},
     {key:'line',   icon:'📈', label:s.side_line||'라인예측'},
-    {key:'__vision', icon:'🤖', label:'AI 비전 분석 (Beta)', action:onVision},
+    {key:'__vision', icon:'🤖', label:'AI 비전 분석 (Beta) — 로컬 서버 필요', action:onVision},
     {key:'__visionResult', icon:'📊', label:'AI 분析결과'},
   ];
   function SideItem(item){
@@ -9720,6 +9727,7 @@ function App() {
   const [showVisionAi,    setShowVisionAi]    = useState(false);
   const [visionResults,   setVisionResults]   = useState(null);
   const [lang,           setLang]           = useState(function(){return localStorage.getItem('wvas_lang')||'ko';});
+  const [isOnline,       setIsOnline]       = useState(navigator.onLine);
   const [showMenu,       setShowMenu]       = useState(false);
   const [showSettings,   setShowSettings]   = useState(false);
   const [showLoadProject,setShowLoadProject]= useState(false);
@@ -9731,6 +9739,13 @@ function App() {
     rafRef.current=requestAnimationFrame(tick); return()=>cancelAnimationFrame(rafRef.current);
   },[]);
   useEffect(()=>{fsRestoreFolder().then(function(h){if(h)setDirHandle(h);});},[]);
+  useEffect(()=>{
+    function onOnline(){setIsOnline(true);}
+    function onOffline(){setIsOnline(false);}
+    window.addEventListener('online',onOnline);
+    window.addEventListener('offline',onOffline);
+    return()=>{window.removeEventListener('online',onOnline);window.removeEventListener('offline',onOffline);};
+  },[]);
   useEffect(()=>{
     const v=videoRef.current; if(!v) return;
     const onP=()=>setPlaying(true),onPa=()=>setPlaying(false);
@@ -10519,6 +10534,18 @@ function App() {
             return n;});},
           title:beginnerMode?'전문가 모드로 전환':'초보자 모드로 전환',
         },beginnerMode?'🔰 초보자':'⚙️ 전문가'),
+        React.createElement('div',{
+          style:{display:'flex',alignItems:'center',gap:4,padding:'3px 9px',borderRadius:20,flexShrink:0,
+                 background:isOnline?'rgba(34,197,94,0.08)':'rgba(100,116,139,0.12)',
+                 border:'1px solid '+(isOnline?'rgba(74,222,128,0.4)':'#475569'),
+                 fontSize:11,color:isOnline?'#4ade80':'#64748b',cursor:'default'},
+          title:isOnline?'온라인 — 모든 기능 사용 가능':'오프라인 — Google Sheets·AI 서버는 인터넷 연결 시 활성화',
+        },
+          React.createElement('div',{style:{width:6,height:6,borderRadius:'50%',flexShrink:0,
+            background:isOnline?'#4ade80':'#64748b',
+            boxShadow:isOnline?'0 0 5px #4ade80':'none'}}),
+          isOnline?'온라인':'오프라인'
+        ),
       ),
     ),
 
