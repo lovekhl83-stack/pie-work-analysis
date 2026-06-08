@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 > nul 2>&1
 setlocal EnableDelayedExpansion
 
@@ -115,7 +115,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
     $form.Controls.Add($cbStart); ^
     ^
     $lbInfo = New-Object System.Windows.Forms.Label; ^
-    $lbInfo.Text = 'PIE는 단일 HTML 파일로 동작합니다. 설치 후 인터넷 없이도 사용 가능하며,' + [char]10 + 'Google Sheets 연동 · AI 비전 분析은 인터넷 연결 시 자동 활성화됩니다.'; ^
+    $lbInfo.Text = 'PIE는 단일 HTML 파일로 동작합니다. 설치 후 인터넷 없이도 사용 가능하며,' + [char]10 + 'Google Sheets 연동 · AI 비전 분석은 인터넷 연결 시 자동 활성화됩니다.'; ^
     $lbInfo.Font = New-Object System.Drawing.Font('Segoe UI',8.5); ^
     $lbInfo.ForeColor = [System.Drawing.Color]::FromArgb(71,85,105); ^
     $lbInfo.Location = New-Object System.Drawing.Point(30,250); ^
@@ -195,7 +195,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
           $lbStatus.Text = '[4/5] 바탕화면 바로가기 생성 중...'; ^
           $progress.Value = 70; ^
           $form.Refresh(); ^
-          $s = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'PIE 작업分析.lnk')); ^
+          $s = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'),'PIE 작업分석.lnk')); ^
           $s.TargetPath = $targetHtml; ^
           $s.Description = 'PIE - Powernet Industrial Engineering'; ^
           $s.Save(); ^
@@ -207,7 +207,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
           $form.Refresh(); ^
           $smDir = Join-Path ([Environment]::GetFolderPath('Programs')) 'PIE'; ^
           if (-not (Test-Path $smDir)) { New-Item -ItemType Directory -Force -Path $smDir | Out-Null } ^
-          $s2 = $ws.CreateShortcut(Join-Path $smDir 'PIE 작업分析.lnk'); ^
+          $s2 = $ws.CreateShortcut(Join-Path $smDir 'PIE 작업分석.lnk'); ^
           $s2.TargetPath = $targetHtml; ^
           $s2.Description = 'PIE - Powernet Industrial Engineering'; ^
           $s2.Save(); ^
@@ -233,7 +233,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
         $form.Refresh(); ^
         Start-Sleep -Milliseconds 500; ^
         ^
-        $msg = 'PIE 설치가 완료되었습니다!' + [char]10 + [char]10 + '설치 경로: ' + $installDir + [char]10 + [char]10 + '바탕화면의 [PIE 작업分析] 아이콘을 클릭해 시작하세요.'; ^
+        $msg = 'PIE 설치가 완료되었습니다!' + [char]10 + [char]10 + '설치 경로: ' + $installDir + [char]10 + [char]10 + '바탕화면의 [PIE 작업分석] 아이콘을 클릭해 시작하세요.'; ^
         [System.Windows.Forms.MessageBox]::Show($msg,'설치 완료',[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Information) | Out-Null; ^
         $form.Close(); ^
       } catch { ^

@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 > nul 2>&1
 setlocal EnableDelayedExpansion
 
@@ -27,7 +27,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
     ^
     $ws = New-Object -ComObject WScript.Shell; ^
     ^
-    $desktopLnk = Join-Path ([Environment]::GetFolderPath('Desktop')) 'PIE 작업分析.lnk'; ^
+    $desktopLnk = Join-Path ([Environment]::GetFolderPath('Desktop')) 'PIE 작업分석.lnk'; ^
     if (Test-Path $desktopLnk) { Remove-Item -Path $desktopLnk -Force -ErrorAction SilentlyContinue } ^
     ^
     $smDir = Join-Path ([Environment]::GetFolderPath('Programs')) 'PIE'; ^
