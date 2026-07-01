@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
@@ -1045,7 +1045,7 @@ const STRINGS = {
   ko:{
     appName:'PIE',
     // Tabs
-    tab_analysis:'📹 분석', tab_gantt:'차트',
+    tab_analysis:'📹 작업분석', tab_gantt:'차트', tab_lineanalysis:'📊 라인분석',
     tab_yamazumi:'⚖ 야마즈미', tab_yamazumi_b:'⚖ 작업배분',
     tab_sim:'🔀 시뮬',      tab_sim_b:'🔀 배치실험',
     tab_stats:'📊 통계',    tab_stats_b:'📊 분석결과',
@@ -1054,7 +1054,7 @@ const STRINGS = {
     side_parts:'🔧 부품관리', side_st:'⏱ ST분석',
     side_assign:'📋 작업편성', side_line:'📈 라인예측',
     // Menu
-    menu:'메뉴', menu_new:'🆕 새 프로젝트', menu_load:'📂 불러오기', menu_settings:'⚙️ 설정',
+    menu:'메뉴', menu_new:'새 프로젝트', menu_load:'불러오기', menu_settings:'설정',
     // New project
     new_confirm:'현재 작업을 모두 지우고 새 프로젝트를 시작하시겠습니까?\n저장하지 않은 데이터는 사라집니다.',
     // Load project
@@ -1071,12 +1071,12 @@ const STRINGS = {
     settings_theme:'테마',
     settings_save:'저장',
     // Header buttons
-    btn_save:'💾 분석 저장', btn_session:'세션', btn_file:'파일', btn_csv:'CSV',
+    btn_save:'분석 저장', btn_session:'세션', btn_file:'파일', btn_csv:'CSV',
     btn_model:'모델관리', btn_ai:'AI분석',
-    btn_compare:'🎬 비교', btn_pdf:'📥 PDF', btn_sop:'📄 SOP',
-    btn_report:'📊 산출보고서',
-    btn_waste_cmp:'🔴 낭비 구간 비교',
-    btn_cycle_cmp:'⚡ 사이클 속도 비교',
+    btn_compare:'비교', btn_pdf:'PDF', btn_sop:'SOP',
+    btn_report:'산출보고서',
+    btn_waste_cmp:'낭비 구간 비교',
+    btn_cycle_cmp:'사이클 속도 비교',
     btn_help:'사용방법', btn_glossary:'용어집',
     // Common
     ok:'확인', cancel:'취소', save:'저장', del:'삭제', add:'추가',
@@ -1107,7 +1107,7 @@ const STRINGS = {
     settings_save:'保存',
     btn_save:'💾 保存分析', btn_session:'会话', btn_file:'文件', btn_csv:'CSV',
     btn_model:'模型管理', btn_ai:'AI分析',
-    btn_compare:'🎬 对比', btn_pdf:'📥 PDF', btn_sop:'📄 SOP',
+    btn_compare:'🎬 对比', btn_pdf:'PDF', btn_sop:'SOP',
     btn_report:'📊 产出报告',
     btn_waste_cmp:'🔴 浪费区间对比',
     btn_cycle_cmp:'⚡ 循环速度对比',
@@ -1140,7 +1140,7 @@ const STRINGS = {
     settings_save:'Lưu',
     btn_save:'💾 Lưu phân tích', btn_session:'Phiên', btn_file:'Tệp', btn_csv:'CSV',
     btn_model:'Quản lý mô hình', btn_ai:'Phân tích AI',
-    btn_compare:'🎬 So sánh', btn_pdf:'📥 PDF', btn_sop:'📄 SOP',
+    btn_compare:'🎬 So sánh', btn_pdf:'PDF', btn_sop:'SOP',
     btn_report:'📊 Báo cáo',
     btn_waste_cmp:'🔴 So sánh lãng phí',
     btn_cycle_cmp:'⚡ So sánh chu kỳ',
@@ -1359,7 +1359,20 @@ function processUid(){return 'P'+Date.now().toString(36)+Math.random().toString(
 //  Parts master storage
 // ─────────────────────────────────────────
 const PARTS_KEY='wvas_parts';
-function partsList(){try{return JSON.parse(localStorage.getItem(PARTS_KEY)||'[]');}catch{return[];}}
+const DEFAULT_PARTS=[
+  {id:'dp_diode',    name:'DIODE',        insertType:'Radial',leadCount:'2',  createdAt:'2024-01-01T00:00:00.000Z'},
+  {id:'dp_trans',    name:'TRANS',        insertType:'Radial',leadCount:'3',  createdAt:'2024-01-01T00:00:00.000Z'},
+  {id:'dp_boxcap',   name:'BOX CAP',      insertType:'Radial',leadCount:'2',  createdAt:'2024-01-01T00:00:00.000Z'},
+  {id:'dp_conn',     name:'CONNECTOR',    insertType:'Axial', leadCount:'',   createdAt:'2024-01-01T00:00:00.000Z'},
+  {id:'dp_lnr',      name:'LINR FILTER',  insertType:'Axial', leadCount:'',   createdAt:'2024-01-01T00:00:00.000Z'},
+  {id:'dp_elcap',    name:'EL CAP',       insertType:'Radial',leadCount:'2',  createdAt:'2024-01-01T00:00:00.000Z'},
+  {id:'dp_ycap',     name:'Y-CAP',        insertType:'Radial',leadCount:'2',  createdAt:'2024-01-01T00:00:00.000Z'},
+  {id:'dp_bridge',   name:'BRIDGE DIODE', insertType:'Radial',leadCount:'4',  createdAt:'2024-01-01T00:00:00.000Z'},
+  {id:'dp_resistor', name:'저항',          insertType:'Axial', leadCount:'2',  createdAt:'2024-01-01T00:00:00.000Z'},
+  {id:'dp_bead',     name:'BEAD',         insertType:'Axial', leadCount:'2',  createdAt:'2024-01-01T00:00:00.000Z'},
+  {id:'dp_etc',      name:'기타',          insertType:'Axial', leadCount:'',   createdAt:'2024-01-01T00:00:00.000Z'},
+];
+function partsList(){try{var s=JSON.parse(localStorage.getItem(PARTS_KEY)||'null');return(s&&s.length)?s:DEFAULT_PARTS.map(function(p){return Object.assign({},p);});}catch{return DEFAULT_PARTS.map(function(p){return Object.assign({},p);});}}
 function partsSave(parts){localStorage.setItem(PARTS_KEY,JSON.stringify(parts));}
 
 // ─────────────────────────────────────────
@@ -2077,18 +2090,16 @@ function ProjectMenuDropdown({lang,onNew,onLoad,onSettings,onClose,onSave,
       React.createElement(Item,{icon:'💾',label:s.btn_save||'💾 분석 저장',action:onSave,color:'#34d399'}),
       React.createElement(Sep,null),
       React.createElement(Item,{icon:'📋',label:s.btn_session,action:onSession}),
-      React.createElement(Item,{icon:'📁',label:s.btn_file,action:onFile}),
       hasCsv&&React.createElement(Item,{icon:'↓',label:s.btn_csv+' 내보내기',action:onCsv}),
       React.createElement(Sep,null),
       React.createElement(Item,{icon:'📱',label:s.btn_model,action:onModel,color:'#93c5fd'}),
-      React.createElement(Item,{icon:'🤖',label:s.btn_ai,action:onAi,color:'#7dd3fc'}),
+      React.createElement(Item,{icon:'🤖',label:'AI 동작분석 (무료)',action:onAi,color:'#a78bfa'}),
       React.createElement(Sep,null),
-      React.createElement(Item,{icon:'🎬',label:s.btn_compare,action:onCompare}),
-      React.createElement(Item,{icon:'🔴',label:s.btn_waste_cmp||'🔴 낭비 구간 비교',action:onWasteCmp,color:'#fca5a5'}),
-      React.createElement(Item,{icon:'⚡',label:s.btn_cycle_cmp||'⚡ 사이클 속도 비교',action:onCycleCmp,color:'#fde68a'}),
+      React.createElement(Item,{icon:'🔴',label:s.btn_waste_cmp||'낭비 구간 비교',action:onWasteCmp,color:'#fca5a5'}),
+      React.createElement(Item,{icon:'⚡',label:s.btn_cycle_cmp||'사이클 속도 비교',action:onCycleCmp,color:'#fde68a'}),
       React.createElement(Item,{icon:'📥',label:s.btn_pdf+' 내보내기',action:onPdf}),
       hasSop&&React.createElement(Item,{icon:'📄',label:s.btn_sop,action:onSop}),
-      React.createElement(Item,{icon:'📊',label:s.btn_report||'📊 산출보고서',action:onReport,color:'#a78bfa'}),
+      React.createElement(Item,{icon:'📊',label:s.btn_report||'산출보고서',action:onReport,color:'#a78bfa'}),
       React.createElement(Sep,null),
       React.createElement(Item,{icon:'📖',label:s.btn_help,action:onHelp}),
       React.createElement(Item,{icon:'📚',label:s.btn_glossary,action:onGlossary}),
@@ -2101,20 +2112,23 @@ function ProjectMenuDropdown({lang,onNew,onLoad,onSettings,onClose,onSave,
 function LeftSidebar({tab,setTab,lang,beginnerMode,onCompare,onVision}){
   var _c=useState(false); var collapsed=_c[0],setCollapsed=_c[1];
   var s=STRINGS[lang]||STRINGS.ko;
-  var ANALYSIS_ITEMS=[
-    {key:'analysis', icon:'📹', label:s.tab_analysis||'분석'},
-    {key:'gantt',    icon:'📊', label:s.tab_gantt||'간트'},
-    {key:'yamazumi', icon:'⚖',  label:beginnerMode?s.tab_yamazumi_b||'작업배분':s.tab_yamazumi||'야마즈미'},
-    {key:'sim',      icon:'🔀', label:beginnerMode?s.tab_sim_b||'배치실험':s.tab_sim||'시뮬'},
+  var WORK_ITEMS=[
+    {key:'analysis', icon:'📹', label:s.tab_analysis||'작업분석'},
+    {key:'gantt',    icon:'📊', label:s.tab_gantt||'차트'},
     {key:'stats',    icon:'📊', label:beginnerMode?s.tab_stats_b||'분석결과':s.tab_stats||'통계'},
     {key:'__compare', icon:'🎬', label:'영상비교', action:onCompare},
+  ];
+  var LINE_ITEMS=[
+    {key:'lineanalysis', icon:'📊', label:s.tab_lineanalysis||'라인분석'},
+    {key:'yamazumi', icon:'⚖',  label:beginnerMode?s.tab_yamazumi_b||'작업배분':s.tab_yamazumi||'야마즈미'},
+    {key:'sim',      icon:'🔀', label:beginnerMode?s.tab_sim_b||'배치실험':s.tab_sim||'시뮬'},
   ];
   var TOOL_ITEMS=[
     {key:'parts',  icon:'🔧', label:s.side_parts||'부품관리'},
     {key:'st',     icon:'⏱', label:s.side_st||'ST분석'},
     {key:'assign', icon:'📋', label:s.side_assign||'작업편성'},
     {key:'line',   icon:'📈', label:s.side_line||'라인예측'},
-    {key:'__vision', icon:'🤖', label:'AI 비전 분석 (Beta) — 로컬 서버 필요', action:onVision},
+    {key:'__vision', icon:'🤖', label:'AI 비전 분석 (무료)', action:onVision},
     {key:'__visionResult', icon:'📊', label:'AI 분석결과'},
   ];
   function SideItem(item){
@@ -2161,8 +2175,11 @@ function LeftSidebar({tab,setTab,lang,beginnerMode,onCompare,onVision}){
     },collapsed?'▶':'◀'),
     SideItem({key:'home',icon:'🏠',label:s.side_home||'홈'}),
     Sep(),
-    SectionLabel('분석'),
-    ...ANALYSIS_ITEMS.map(SideItem),
+    SectionLabel('작업 분석'),
+    ...WORK_ITEMS.map(SideItem),
+    Sep(),
+    SectionLabel('라인분석'),
+    ...LINE_ITEMS.map(SideItem),
     Sep(),
     SectionLabel('도구'),
     ...TOOL_ITEMS.map(SideItem),
@@ -7683,7 +7700,7 @@ function analyzeDiff(buf, master){
 function dirCost(a,b){
   // 손 방향 코사인 유사도 거리 (0=같은 방향, 2=반대 방향)
   // ldx/ldy/rdx/rdy 없을 때 NaN 방어
-  var dot=a.ldx*b.ldx+a.ldy*b.ldy+a.rdx*b.rdx+a.rdy*b.rdy;
+  var dot=(a.ldx||0)*(b.ldx||0)+(a.ldy||0)*(b.ldy||0)+(a.rdx||0)*(b.rdx||0)+(a.rdy||0)*(b.rdy||0);
   return Math.max(0,(2-dot)/2); // 0~1 범위로 정규화
 }
 // ── DTW with Sakoe-Chiba Band ─────────────────────────────────────
@@ -7830,7 +7847,7 @@ function VisionAiModal(props){
         var fw=v.videoWidth,fh=v.videoHeight;
         if(cv.width!==fw||cv.height!==fh){cv.width=fw;cv.height=fh;}
         var ctx=cv.getContext('2d');
-        if(v.readyState>=2) ctx.drawImage(v,0,0,fw,fh);
+        ctx.clearRect(0,0,fw,fh); // keep canvas transparent so video shows through
         if(status==='done'&&showTraj&&trajCvsRef.current[i]){
           // 궤적 오프스크린 캔버스 오버레이
           ctx.drawImage(trajCvsRef.current[i],0,0,fw,fh);
@@ -8072,7 +8089,8 @@ function VisionAiModal(props){
   function handleCanvasClick(vi){
     return function(e){
       e.preventDefault();
-      var v=vRefs[vi].current;if(!v||!v.duration)return;
+      var v=vRefs[vi].current;if(!v)return;
+      if(!v.duration||isNaN(v.duration)){alert('영상 로딩 중입니다. 잠시 후 다시 클릭해주세요.');return;}
       var cur=v.currentTime;
       var phase=markPhaseRef.current;
       if(phase===0||phase===2){
@@ -8363,7 +8381,7 @@ function VisionAiModal(props){
     t.lastMicroWork=_microWork&&(t.emaSpd<0.03);
 
     var newSt;
-    var masterReady=masterStatusRef.current[u.ui]==='ready'&&t.masterFrames.length>=10;
+    var masterReady=masterStatusRef.current[u.ui]==='ready'&&t.masterFrames.length>=3;
     if(masterReady&&t.buffer.length>=20){
       if(isStill){
         newSt='대기/낭비';t.lastDTW=null;
@@ -8548,6 +8566,27 @@ function VisionAiModal(props){
         if(!goRef.current) return;
         // Phase2 시크백: 마스터 캡처 완료 후 처음부터 재분석
         if(seekBackRef.current){
+          // Force 'ready' if video ended/passed master range while stuck in 'none'/'capturing'
+          unitsRef.current.forEach(function(u){
+            if(masterStatusRef.current[u.ui]==='ready') return;
+            var v=vRefs[u.vi].current;
+            var mr3=masterRangeRef.current;
+            var stuck=v&&(v.ended||(v.currentTime>mr3.end&&masterStatusRef.current[u.ui]==='capturing'));
+            if(stuck){
+              masterStatusRef.current[u.ui]='ready';
+              var t=trkRef.current[u.ui];
+              if(t.masterFrames.length>0){
+                var _mf=t.masterFrames,_mn=_mf.length||1;
+                t.masterBody={
+                  hd:_mf.reduce(function(a,f){return a+(f.hd||0);},0)/_mn,
+                  lc:_mf.reduce(function(a,f){return a+(f.lc||0);},0)/_mn,
+                  rc:_mf.reduce(function(a,f){return a+(f.rc||0);},0)/_mn,
+                  sym:_mf.reduce(function(a,f){return a+(f.sym||0);},0)/_mn
+                };
+              }
+              logRef.current=[{t:v.currentTime.toFixed(1),lbl:u.label,s:'[마스터 '+t.masterFrames.length+'프레임 확보 → 처음부터 재분析 시작]',isMaster:true}].concat(logRef.current).slice(0,120);
+            }
+          });
           var _allRdy=unitsRef.current.every(function(u){return masterStatusRef.current[u.ui]==='ready';});
           if(_allRdy){
             seekBackRef.current=false;
@@ -8840,10 +8879,15 @@ function VisionAiModal(props){
         onWheel:handleWheel(vi),
       },
         React.createElement('video',{ref:vRefs[vi],
-          style:{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain',pointerEvents:'none'},
-          playsInline:true,muted:true}),
+          style:{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain',pointerEvents:'none',zIndex:1},
+          playsInline:true,muted:true,preload:'auto'}),
         React.createElement('canvas',{ref:cvsRefs[vi],
-          style:{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain',pointerEvents:'none'}}),
+          style:{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:2}}),
+        hasVid&&status==='idle'&&React.createElement('button',{
+          onClick:function(e){e.stopPropagation();var v=vRefs[vi].current;if(!v)return;if(v.paused)v.play();else v.pause();},
+          style:{position:'absolute',top:8,right:8,zIndex:20,background:'rgba(0,0,0,0.65)',color:'#fff',border:'1px solid rgba(255,255,255,0.25)',borderRadius:6,padding:'4px 12px',cursor:'pointer',fontSize:12,fontWeight:700}},
+          '▶ 재생 / 우클릭 정지'
+        ),
         !hasVid&&React.createElement('div',{
           style:{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',
                  color:C.sub,fontSize:12,flexDirection:'column',gap:8}},
@@ -9669,6 +9713,558 @@ function VisionAiModal(props){
 
 
 
+// ══════════════════════════════════════════════════════════════════
+//  LineAnalysisPanel  — 라인 분석 (부품별 평균 시간 → 작업배분 연동)
+// ══════════════════════════════════════════════════════════════════
+function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoad,onProjectLoaded,onSaveProject,onLoadProject,onNewProject}){
+  var LS_W='pie_line_workers', LS_T='pie_line_tasks', LS_MN='pie_line_model';
+  function loadW(){try{return JSON.parse(localStorage.getItem(LS_W)||'[]');}catch{return[];}}
+  function loadT(){try{return JSON.parse(localStorage.getItem(LS_T)||'{}');}catch{return{};}}
+
+  var _w=useState(loadW); var workers=_w[0],setWorkers=_w[1];
+  var _wt=useState(loadT); var workerTasks=_wt[0],setWorkerTasks=_wt[1];
+  var _aw=useState(function(){var ws=loadW();return ws.length>0?ws[0].id:null;});
+  var activeWorkerId=_aw[0],setActiveWorkerId=_aw[1];
+  var _wv=useState({}); var workerVideos=_wv[0],setWorkerVideos=_wv[1];
+  var _pd=useState(null); var pending=_pd[0],setPending=_pd[1];
+  var _sp=useState(null); var selectedPartId=_sp[0],setSelectedPartId=_sp[1];
+  var _cc=useState(1);    var currentCycle=_cc[0],setCurrentCycle=_cc[1];
+  var _lvp=useState(false); var lineVideoPlaying=_lvp[0],setLineVideoPlaying=_lvp[1];
+  var _lvd=useState(0);    var lineVideoDuration=_lvd[0],setLineVideoDuration=_lvd[1];
+  var _lvc=useState(0);    var lineVideoCurrentTime=_lvc[0],setLineVideoCurrentTime=_lvc[1];
+  var _ah=useState('LH');  var activeHand=_ah[0],setActiveHand=_ah[1];
+  var _mn=useState(function(){return localStorage.getItem(LS_MN)||'';});
+  var modelName=_mn[0],setModelName=_mn[1];
+  var videoRef=React.useRef(null);
+  var fileRef=React.useRef(null);
+
+  React.useEffect(function(){localStorage.setItem(LS_W,JSON.stringify(workers));},[workers]);
+  React.useEffect(function(){localStorage.setItem(LS_T,JSON.stringify(workerTasks));},[workerTasks]);
+  React.useEffect(function(){localStorage.setItem(LS_MN,modelName);},[modelName]);
+  React.useEffect(function(){setCurrentCycle(1);},[activeWorkerId]);
+  // 스냅샷 - 저장 시 App에서 읽어감
+  React.useEffect(function(){
+    if(snapshotRef) snapshotRef.current={workers:workers,workerTasks:workerTasks,modelName:modelName,workerVideos:workerVideos};
+  },[workers,workerTasks,modelName,workerVideos,snapshotRef]);
+  // 프로젝트 로드 적용
+  React.useEffect(function(){
+    if(!projectToLoad) return;
+    if(projectToLoad._clear){
+      setWorkers([]);setWorkerTasks({});setModelName('');setWorkerVideos({});
+      setActiveWorkerId(null);setCurrentCycle(1);setPending(null);
+    } else {
+      setWorkers(projectToLoad.workers||[]);
+      setWorkerTasks(projectToLoad.workerTasks||{});
+      setModelName(projectToLoad.modelName||'');
+      setWorkerVideos(projectToLoad.workerVideos||{});
+      var fw=(projectToLoad.workers||[])[0];
+      if(fw) setActiveWorkerId(fw.id);
+    }
+    if(onProjectLoaded) onProjectLoaded();
+  },[projectToLoad]);
+
+  // 결과 계산 → 부모(Yamazumi)에 전달
+  React.useEffect(function(){
+    if(!onDataChange) return;
+    var yamaTasks=[];
+    workers.forEach(function(worker){
+      var wtasks=workerTasks[worker.id]||[];
+      var pg={};
+      wtasks.forEach(function(t){
+        if(!t.partId) return;
+        if(!pg[t.partId]) pg[t.partId]={total:0,count:0};
+        pg[t.partId].total+=t.duration;
+        pg[t.partId].count++;
+      });
+      Object.keys(pg).forEach(function(partId){
+        var g=pg[partId];
+        var avg=g.total/g.count;
+        var part=parts.find(function(p){return p.id===partId;});
+        var ci=parts.findIndex(function(p){return p.id===partId;});
+        yamaTasks.push({
+          id:worker.id+'_'+partId,
+          name:part?part.name:'미지정',
+          type:'value-added',
+          duration:parseFloat(avg.toFixed(3)),
+          worker:worker.id,
+          cycle:1, startTime:0, endTime:parseFloat(avg.toFixed(3)),
+          partId:partId,
+          color:TASK_COLORS[ci%TASK_COLORS.length],
+        });
+      });
+    });
+    onDataChange({workers:workers,tasks:yamaTasks});
+  },[workers,workerTasks,parts]);
+
+  function addWorker(){
+    var name=prompt('작업자 이름:');
+    if(!name||!name.trim()) return;
+    var w={id:'lw_'+Date.now().toString(36),name:name.trim()};
+    setWorkers(function(p){return[...p,w];});
+    setActiveWorkerId(w.id);
+  }
+  function removeWorker(id){
+    if(!confirm('이 작업자의 모든 마크 데이터가 삭제됩니다. 계속하시겠습니까?')) return;
+    setWorkers(function(p){return p.filter(function(w){return w.id!==id;});});
+    setWorkerVideos(function(p){var n=Object.assign({},p);delete n[id];return n;});
+    setWorkerTasks(function(p){var n=Object.assign({},p);delete n[id];return n;});
+    if(activeWorkerId===id){
+      setActiveWorkerId(function(){
+        var remaining=workers.filter(function(w){return w.id!==id;});
+        return remaining.length>0?remaining[0].id:null;
+      });
+    }
+  }
+  function renameWorker(id){
+    var w=workers.find(function(x){return x.id===id;});
+    var name=prompt('새 이름:', w?w.name:'');
+    if(!name||!name.trim()) return;
+    setWorkers(function(p){return p.map(function(x){return x.id===id?Object.assign({},x,{name:name.trim()}):x;});});
+  }
+  function handleVideoFile(file){
+    if(!file||!activeWorkerId) return;
+    var src=URL.createObjectURL(file);
+    setWorkerVideos(function(p){return Object.assign({},p,{[activeWorkerId]:{name:file.name,src:src}});});
+    window.setTimeout(function(){
+      if(videoRef.current){videoRef.current.src=src;videoRef.current.load();}
+    },50);
+  }
+  function markStart(){
+    if(!videoRef.current||!activeWorkerId) return;
+    videoRef.current.pause();
+    setPending(videoRef.current.currentTime);
+  }
+  function markEnd(){
+    if(!videoRef.current||!activeWorkerId||pending===null) return;
+    videoRef.current.pause();
+    var et=videoRef.current.currentTime;
+    if(et<=pending){alert('종료 시점이 시작 시점보다 앞에 있습니다.');return;}
+    var task={
+      id:'lt_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+      partId:selectedPartId||null,
+      cycle:currentCycle,
+      duration:parseFloat((et-pending).toFixed(3)),
+      startTime:parseFloat(pending.toFixed(3)),
+      endTime:parseFloat(et.toFixed(3)),
+      hand:activeHand,
+    };
+    setWorkerTasks(function(p){
+      var wt=(p[activeWorkerId]||[]).slice();
+      wt.push(task);
+      wt.sort(function(a,b){return a.startTime-b.startTime;});
+      return Object.assign({},p,{[activeWorkerId]:wt});
+    });
+    setPending(null);
+  }
+  function deleteMark(taskId){
+    if(!activeWorkerId) return;
+    setWorkerTasks(function(p){
+      return Object.assign({},p,{[activeWorkerId]:(p[activeWorkerId]||[]).filter(function(t){return t.id!==taskId;})});
+    });
+  }
+  function updateMarkPart(taskId,partId){
+    if(!activeWorkerId) return;
+    setWorkerTasks(function(p){
+      return Object.assign({},p,{[activeWorkerId]:(p[activeWorkerId]||[]).map(function(t){
+        return t.id===taskId?Object.assign({},t,{partId:partId||null}):t;
+      })});
+    });
+  }
+  function clearWorkerMarks(){
+    if(!activeWorkerId) return;
+    if(!confirm('현재 작업자의 마크를 모두 삭제하시겠습니까?')) return;
+    setWorkerTasks(function(p){return Object.assign({},p,{[activeWorkerId]:[]});});
+    setPending(null);
+  }
+  function handleVideoClick(){
+    if(!videoRef.current) return;
+    if(pending===null) markStart(); else markEnd();
+  }
+  function handleVideoRightClick(e){
+    e.preventDefault();
+    if(!videoRef.current) return;
+    if(videoRef.current.paused){var p=videoRef.current.play();if(p&&p.catch)p.catch(function(){});}else videoRef.current.pause();
+  }
+  function handleVideoWheel(e){
+    e.preventDefault();
+    if(!videoRef.current||!lineVideoDuration) return;
+    var delta=e.deltaY>0?-0.033:0.033;
+    var t=Math.max(0,Math.min(lineVideoDuration,videoRef.current.currentTime+delta));
+    videoRef.current.currentTime=t;
+    setLineVideoCurrentTime(t);
+  }
+
+  // 결과 매트릭스 계산
+  var lineResults=React.useMemo(function(){
+    var allPids=[];
+    workers.forEach(function(w){
+      (workerTasks[w.id]||[]).forEach(function(t){
+        if(t.partId&&!allPids.includes(t.partId)) allPids.push(t.partId);
+      });
+    });
+    var matrix={};
+    workers.forEach(function(w){
+      (workerTasks[w.id]||[]).forEach(function(t){
+        if(!t.partId) return;
+        if(!matrix[t.partId]) matrix[t.partId]={};
+        if(!matrix[t.partId][w.id]) matrix[t.partId][w.id]={total:0,count:0};
+        matrix[t.partId][w.id].total+=t.duration;
+        matrix[t.partId][w.id].count++;
+      });
+    });
+    var result={};
+    var workerTotals={};
+    workers.forEach(function(w){workerTotals[w.id]=0;});
+    allPids.forEach(function(pid){
+      result[pid]={};
+      workers.forEach(function(w){
+        var g=matrix[pid]&&matrix[pid][w.id];
+        if(g&&g.count>0){var avg=g.total/g.count;result[pid][w.id]={avg:avg,count:g.count};workerTotals[w.id]+=avg;}
+        else result[pid][w.id]=null;
+      });
+    });
+    return{matrix:result,partIds:allPids,workerTotals:workerTotals};
+  },[workers,workerTasks]);
+
+  function fmtD(s){
+    if(!s||!isFinite(s)) return '-';
+    if(s>=60) return Math.floor(s/60)+'m'+(s%60).toFixed(1)+'s';
+    return s.toFixed(2)+'s';
+  }
+  var C2={bg:'#090f1a',panel:'#1e293b',bd:'#334155',text:'#e2e8f0',sub:'#64748b',accent:'#3b82f6',green:'#22c55e',red:'#ef4444',amber:'#f59e0b'};
+  var activeWorker=workers.find(function(w){return w.id===activeWorkerId;});
+  var activeVideo=workerVideos[activeWorkerId];
+  var activeTasks=workerTasks[activeWorkerId]||[];
+  var resultParts=lineResults.partIds
+    .map(function(pid){return parts.find(function(p){return p.id===pid;})||{id:pid,name:'미지정'};})
+    .sort(function(a,b){return(a.name||'').localeCompare(b.name||'','ko');});
+
+  if(workers.length===0){
+    return React.createElement('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',gap:16,color:C2.sub}},
+      React.createElement('div',{style:{fontSize:40}},'👷'),
+      React.createElement('div',{style:{fontSize:15,color:'#94a3b8'}},'작업자를 추가하여 라인 분석을 시작하세요'),
+      React.createElement('div',{style:{fontSize:12,color:C2.sub,textAlign:'center',maxWidth:360,lineHeight:1.6}},
+        '각 작업자의 영상을 업로드하고 부품별로 시간을 마크하면\n작업배분/배치실험에서 라인 밸런스를 확인할 수 있습니다.'),
+      React.createElement('button',{
+        onClick:addWorker,
+        style:{padding:'10px 24px',background:C2.accent,color:'#fff',border:'none',borderRadius:8,cursor:'pointer',fontSize:14,fontWeight:700}
+      },'+ 작업자 추가')
+    );
+  }
+
+  return React.createElement('div',{style:{display:'flex',flexDirection:'column',height:'100%',background:C2.bg,overflow:'hidden'}},
+    // ── 상단 헤더 (모델명 + 작업자 탭) ──
+    React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,padding:'6px 12px',background:C2.panel,borderBottom:'1px solid '+C2.bd,flexShrink:0,flexWrap:'wrap'}},
+      React.createElement('span',{style:{fontSize:13,fontWeight:700,color:'#fff',flexShrink:0}},'📊 라인 분석'),
+      React.createElement('input',{
+        type:'text',value:modelName,
+        onChange:function(e){setModelName(e.target.value);},
+        placeholder:'모델명 입력',
+        style:{fontSize:12,background:'transparent',border:'none',borderBottom:'1px solid '+C2.bd,color:'#e2e8f0',padding:'2px 6px',width:140,outline:'none'},
+      }),
+      React.createElement('div',{style:{width:1,height:18,background:C2.bd,flexShrink:0}}),
+      workers.map(function(w){
+        var isA=w.id===activeWorkerId;
+        var cnt=(workerTasks[w.id]||[]).length;
+        return React.createElement('div',{key:w.id,style:{display:'flex',alignItems:'center',gap:0}},
+          React.createElement('button',{
+            onClick:function(){setActiveWorkerId(w.id);},
+            onDoubleClick:function(){renameWorker(w.id);},
+            title:'더블클릭으로 이름 변경',
+            style:{padding:'3px 10px',borderRadius:'6px 0 0 6px',border:'1px solid '+(isA?C2.accent:C2.bd),
+              background:isA?'rgba(59,130,246,0.15)':'transparent',
+              color:isA?'#93c5fd':C2.sub,fontSize:12,cursor:'pointer',fontWeight:isA?700:400,
+              display:'flex',alignItems:'center',gap:4,borderRight:'none'}
+          },
+            w.name,
+            cnt>0&&React.createElement('span',{style:{fontSize:9,background:'rgba(34,197,94,0.2)',color:C2.green,padding:'1px 4px',borderRadius:8}},cnt)
+          ),
+          React.createElement('button',{
+            onClick:function(){removeWorker(w.id);},
+            title:'작업자 삭제',
+            style:{padding:'3px 5px',borderRadius:'0 6px 6px 0',border:'1px solid '+(isA?C2.accent:C2.bd),
+              background:isA?'rgba(59,130,246,0.15)':'transparent',
+              color:C2.sub,fontSize:10,cursor:'pointer',borderLeft:'none'}
+          },'×')
+        );
+      }),
+      React.createElement('button',{
+        onClick:addWorker,
+        style:{padding:'3px 10px',borderRadius:6,border:'1px dashed '+C2.bd,background:'transparent',color:C2.sub,fontSize:12,cursor:'pointer',flexShrink:0}
+      },'+ 추가'),
+    ),
+
+    // ── 본문: 좌(영상+마크) | 우(결과 매트릭스) ──
+    React.createElement('div',{style:{display:'flex',flex:1,overflow:'hidden'}},
+
+      // ── 좌: 영상 + 마킹 ──
+      React.createElement('div',{style:{display:'flex',flexDirection:'column',flex:'0 0 55%',borderRight:'1px solid '+C2.bd,overflow:'hidden'}},
+
+        // 영상 영역
+        React.createElement('div',{style:{flex:1,background:'#000',position:'relative',overflow:'hidden',minHeight:180,display:'flex',flexDirection:'column'}},
+          activeVideo
+            ?React.createElement('div',{style:{flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}},
+                React.createElement('video',{ref:videoRef,
+                  src:activeVideo.src,preload:'auto',
+                  onLoadedMetadata:function(){if(videoRef.current)setLineVideoDuration(videoRef.current.duration);},
+                  onTimeUpdate:function(){if(videoRef.current)setLineVideoCurrentTime(videoRef.current.currentTime);},
+                  onPlay:function(){setLineVideoPlaying(true);},
+                  onPause:function(){setLineVideoPlaying(false);},
+                  style:{maxWidth:'100%',maxHeight:'100%',display:'block'}}),
+                React.createElement('div',{
+                  onClick:handleVideoClick,
+                  onContextMenu:handleVideoRightClick,
+                  onWheel:handleVideoWheel,
+                  style:{position:'absolute',inset:0,cursor:'crosshair'}
+                },
+                  pending!==null&&React.createElement('div',{style:{position:'absolute',top:6,left:6,background:'rgba(220,38,38,0.85)',color:'#fff',fontSize:10,padding:'2px 8px',borderRadius:10,pointerEvents:'none'}},
+                    '● IN '+pending.toFixed(2)+'s'
+                  ),
+                  React.createElement('div',{style:{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',fontSize:9,color:'rgba(255,255,255,0.45)',pointerEvents:'none'}},
+                    pending===null
+                      ?'좌클릭: 시작 마크  |  우클릭: '+(lineVideoPlaying?'정지':'재생')+'  |  휠: 미세이동'
+                      :'IN '+pending.toFixed(2)+'s 기록됨  —  좌클릭: 종료 마크  |  우클릭: '+(lineVideoPlaying?'정지':'재생')
+                  ),
+                  React.createElement('div',{style:{position:'absolute',top:6,right:6,display:'flex',gap:4}},
+                    React.createElement('span',{style:{fontSize:9,color:'#94a3b8',background:'rgba(0,0,0,0.7)',padding:'2px 5px',borderRadius:3}},activeVideo.name),
+                    React.createElement('button',{
+                      onClick:function(e){e.stopPropagation();fileRef.current&&fileRef.current.click();},
+                      style:{fontSize:9,background:'rgba(0,0,0,0.7)',color:'#94a3b8',border:'1px solid #334155',borderRadius:3,cursor:'pointer',padding:'2px 5px'}
+                    },'🔄 교체'),
+                  ),
+                ),
+              )
+            :React.createElement('div',{style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,color:C2.sub}},
+              React.createElement('div',{style:{fontSize:32}},'🎬'),
+              React.createElement('div',{style:{fontSize:12}},activeWorker?activeWorker.name+' 작업자의 영상을 선택하세요':'작업자를 선택하세요'),
+              activeWorkerId&&React.createElement('button',{
+                onClick:function(){fileRef.current&&fileRef.current.click();},
+                style:{padding:'6px 16px',background:C2.accent,color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontSize:12}
+              },'📁 영상 선택'),
+            ),
+          activeVideo&&lineVideoDuration>0&&React.createElement('div',{style:{padding:'3px 8px',background:'#0a1020',flexShrink:0}},
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6}},
+              React.createElement('span',{style:{fontSize:9,color:'#475569',minWidth:38}},
+                lineVideoCurrentTime>=60?Math.floor(lineVideoCurrentTime/60)+'m'+(lineVideoCurrentTime%60).toFixed(1)+'s':lineVideoCurrentTime.toFixed(2)+'s'
+              ),
+              React.createElement('input',{type:'range',min:0,max:lineVideoDuration,step:0.001,value:lineVideoCurrentTime,
+                onChange:function(e){var t=parseFloat(e.target.value);if(videoRef.current)videoRef.current.currentTime=t;setLineVideoCurrentTime(t);},
+                style:{flex:1,accentColor:C2.accent,height:3,cursor:'pointer'}
+              }),
+              React.createElement('span',{style:{fontSize:9,color:'#475569',minWidth:38,textAlign:'right'}},
+                lineVideoDuration>=60?Math.floor(lineVideoDuration/60)+'m'+(lineVideoDuration%60).toFixed(1)+'s':lineVideoDuration.toFixed(2)+'s'
+              ),
+            )
+          ),
+        ),
+        React.createElement('input',{type:'file',accept:'video/*',ref:fileRef,style:{display:'none'},
+          onChange:function(e){if(e.target.files[0]){handleVideoFile(e.target.files[0]);e.target.value='';}}}),
+
+        // 마킹 컨트롤
+        React.createElement('div',{style:{padding:'8px 10px',background:C2.panel,borderTop:'1px solid '+C2.bd,flexShrink:0}},
+          React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6,marginBottom:6}},
+            React.createElement('span',{style:{fontSize:11,color:C2.sub,flexShrink:0}},'부품:'),
+            React.createElement('select',{
+              value:selectedPartId||'',
+              onChange:function(e){setSelectedPartId(e.target.value||null);},
+              style:{flex:1,background:'#0f172a',color:selectedPartId?'#e2e8f0':C2.amber,border:'1px solid '+(selectedPartId?C2.bd:'rgba(245,158,11,0.5)'),borderRadius:4,padding:'3px 6px',fontSize:11}
+            },
+              React.createElement('option',{value:''},'⚠ 부품 선택 필수'),
+              parts.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'','ko');}).map(function(p){
+                return React.createElement('option',{key:p.id,value:p.id},p.name);
+              })
+            ),
+          ),
+          React.createElement('div',{style:{display:'flex',alignItems:'center',gap:5,marginBottom:6}},
+            React.createElement('span',{style:{fontSize:11,color:C2.sub,flexShrink:0}},'사이클:'),
+            React.createElement('button',{
+              onClick:function(){setCurrentCycle(function(c){return Math.max(1,c-1);});},
+              style:{padding:'1px 7px',background:'transparent',border:'1px solid '+C2.bd,borderRadius:4,color:C2.sub,cursor:'pointer',fontSize:13,lineHeight:1}
+            },'◀'),
+            React.createElement('span',{style:{minWidth:52,textAlign:'center',fontSize:12,fontWeight:700,color:'#e2e8f0'}},currentCycle+'사이클'),
+            React.createElement('button',{
+              onClick:function(){setCurrentCycle(function(c){return c+1;});},
+              style:{padding:'1px 7px',background:'transparent',border:'1px solid '+C2.bd,borderRadius:4,color:C2.sub,cursor:'pointer',fontSize:13,lineHeight:1}
+            },'▶'),
+            React.createElement('button',{
+              onClick:function(){setCurrentCycle(function(c){return c+1;});},
+              style:{padding:'2px 8px',background:'rgba(59,130,246,0.12)',border:'1px solid rgba(59,130,246,0.3)',borderRadius:4,color:'#93c5fd',cursor:'pointer',fontSize:10,marginLeft:'auto',flexShrink:0}
+            },'다음 사이클 +'),
+          ),
+          React.createElement('div',{style:{display:'flex',gap:5,marginBottom:5}},
+            React.createElement('span',{style:{fontSize:10,color:C2.sub,flexShrink:0,lineHeight:'22px'}},'손:'),
+            ['LH','RH'].map(function(h){
+              return React.createElement('button',{key:h,
+                onClick:function(){
+                  setActiveHand(h);
+                  if(h==='RH'&&videoRef.current){videoRef.current.currentTime=0;videoRef.current.pause();setPending(null);}
+                },
+                style:{flex:1,padding:'3px 0',fontSize:11,borderRadius:4,border:'1px solid',cursor:'pointer',
+                       background:activeHand===h?(h==='LH'?'#1d4ed8':'#15803d'):'transparent',
+                       color:activeHand===h?'#fff':C2.sub,
+                       borderColor:activeHand===h?(h==='LH'?'#3b82f6':'#22c55e'):C2.bd}},
+                h==='LH'?'🤚 LH 왼손':'✋ RH 오른손');
+            }),
+          ),
+          activeHand==='RH'&&React.createElement('div',{style:{fontSize:10,color:'#86efac',marginBottom:4}},'← RH 모드: 영상 처음부터 재마킹'),
+          React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:2,marginBottom:5}},
+            [['LH','#3b82f6'],['RH','#22c55e']].map(function(pair){
+              var h=pair[0],col=pair[1];
+              var ht=(workerTasks[activeWorkerId]||[]).filter(function(t){return t.hand===h;});
+              var dur=lineVideoDuration||1;
+              var total=ht.reduce(function(s,t){return s+(t.duration||0);},0);
+              return React.createElement('div',{key:h,style:{display:'flex',alignItems:'center',gap:4}},
+                React.createElement('span',{style:{fontSize:9,color:col,width:18,fontWeight:700,flexShrink:0}},h),
+                React.createElement('div',{style:{flex:1,height:8,background:'#0a1020',borderRadius:2,position:'relative',overflow:'hidden',border:'1px solid '+C2.bd}},
+                  ht.map(function(t){
+                    return React.createElement('div',{key:t.id,style:{
+                      position:'absolute',left:((t.startTime/dur)*100)+'%',
+                      width:Math.max(0.5,(t.duration/dur)*100)+'%',
+                      height:'100%',background:col,opacity:0.85,borderRadius:1
+                    }});
+                  })
+                ),
+                React.createElement('span',{style:{fontSize:9,color:C2.sub,width:34,textAlign:'right',flexShrink:0}},
+                  total>=60?Math.floor(total/60)+'m'+(total%60).toFixed(1)+'s':total.toFixed(2)+'s'),
+              );
+            })
+          ),
+          React.createElement('div',{style:{display:'flex',gap:6}},
+            React.createElement('button',{
+              onClick:markStart,
+              disabled:!activeVideo||!activeWorkerId,
+              style:{flex:1,padding:'7px 0',background:pending!==null?'rgba(20,83,45,0.8)':'rgba(30,58,95,0.8)',
+                color:pending!==null?'#86efac':'#93c5fd',
+                border:'1px solid '+(pending!==null?'#166534':'#1e40af'),
+                borderRadius:6,cursor:'pointer',fontSize:12,fontWeight:700,
+                opacity:(!activeVideo||!activeWorkerId)?0.4:1}
+            },pending!==null?'▶ '+pending.toFixed(2)+'s에서 시작':'⏺ 시작 마크 (S)'),
+            React.createElement('button',{
+              onClick:markEnd,
+              disabled:!activeVideo||pending===null,
+              style:{flex:1,padding:'7px 0',
+                background:pending!==null?'rgba(127,29,29,0.8)':'rgba(30,41,59,0.5)',
+                color:pending!==null?'#fca5a5':C2.sub,
+                border:'1px solid '+(pending!==null?'#991b1b':C2.bd),
+                borderRadius:6,cursor:'pointer',fontSize:12,fontWeight:700,
+                opacity:pending===null?0.4:1}
+            },'⏹ 종료 마크 (E)'),
+          ),
+          pending!==null&&!selectedPartId&&React.createElement('div',{style:{fontSize:10,color:C2.amber,marginTop:3}},'⚠ 종료 전에 부품을 선택하세요'),
+        ),
+
+        // 마크 목록
+        React.createElement('div',{style:{flex:'0 0 auto',maxHeight:220,overflowY:'auto',borderTop:'1px solid '+C2.bd}},
+          React.createElement('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'4px 10px',background:'#0f172a',borderBottom:'1px solid '+C2.bd}},
+            React.createElement('span',{style:{fontSize:10,color:C2.sub}},(function(){var mc=activeTasks.reduce(function(m,t){return Math.max(m,t.cycle||1);},0);return activeTasks.length+'개 마크'+(mc>1?' · '+mc+'사이클':'');})()),
+            activeTasks.length>0&&React.createElement('button',{
+              onClick:clearWorkerMarks,
+              style:{fontSize:9,color:'#fca5a5',background:'transparent',border:'1px solid rgba(239,68,68,0.3)',borderRadius:3,cursor:'pointer',padding:'1px 6px'}
+            },'전체 삭제'),
+          ),
+          activeTasks.length===0
+            ?React.createElement('div',{style:{padding:'16px',textAlign:'center',color:C2.sub,fontSize:11}},'시작/종료 마크로 작업 구간을 기록하세요')
+            :activeTasks.map(function(t,idx){
+              var part=parts.find(function(p){return p.id===t.partId;});
+              return React.createElement('div',{key:t.id,style:{display:'flex',alignItems:'center',gap:5,padding:'4px 8px',borderBottom:'1px solid #0f172a',fontSize:11,background:idx%2?'transparent':'rgba(255,255,255,0.01)'}},
+                React.createElement('span',{style:{color:C2.sub,flexShrink:0,minWidth:14,textAlign:'right',fontSize:9}},idx+1),
+                React.createElement('span',{style:{color:'#3b82f6',flexShrink:0,fontSize:9,minWidth:22,textAlign:'center',background:'rgba(59,130,246,0.1)',borderRadius:3,padding:'0 2px'}},t.cycle||1),
+                React.createElement('span',{style:{color:'#22c55e',flexShrink:0,minWidth:50,fontSize:10}},fmtD(t.duration)),
+                React.createElement('select',{
+                  value:t.partId||'',
+                  onChange:function(e){updateMarkPart(t.id,e.target.value||null);},
+                  style:{flex:1,background:'transparent',color:t.partId?'#e2e8f0':C2.amber,border:'1px solid '+(t.partId?'#1e293b':'rgba(245,158,11,0.4)'),borderRadius:3,padding:'1px 3px',fontSize:10}
+                },
+                  React.createElement('option',{value:''},'미선택'),
+                  parts.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'','ko');}).map(function(p){
+                    return React.createElement('option',{key:p.id,value:p.id},p.name);
+                  })
+                ),
+                React.createElement('span',{style:{color:'#475569',fontSize:9,flexShrink:0}},t.startTime.toFixed(1)+'~'+t.endTime.toFixed(1)+'s'),
+                React.createElement('button',{
+                  onClick:function(){deleteMark(t.id);},
+                  style:{background:'transparent',border:'none',color:'#475569',cursor:'pointer',padding:'0 3px',fontSize:11,flexShrink:0}
+                },'×')
+              );
+            })
+        ),
+      ),
+
+      // ── 우: 결과 매트릭스 ──
+      React.createElement('div',{style:{display:'flex',flexDirection:'column',flex:'0 0 45%',overflow:'hidden'}},
+        React.createElement('div',{style:{padding:'6px 12px',background:C2.panel,borderBottom:'1px solid '+C2.bd,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between'}},
+          React.createElement('span',{style:{fontSize:12,fontWeight:700,color:'#fff'}},'📋 부품별 평균 작업시간'),
+          taktTime>0&&React.createElement('span',{style:{fontSize:10,color:C2.sub}},'택트 '+taktTime+'s 기준'),
+        ),
+        resultParts.length===0
+          ?React.createElement('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flex:1,color:C2.sub,fontSize:12,gap:8}},
+            React.createElement('div',{style:{fontSize:28}},'📊'),
+            React.createElement('div',null,'마크 완료 후 결과가 표시됩니다'),
+            React.createElement('div',{style:{fontSize:10,color:'#334155',textAlign:'center',maxWidth:200,lineHeight:1.5}},'각 작업자 탭에서 부품별 시작/종료 마크를 완료하세요'),
+          )
+          :React.createElement('div',{style:{overflow:'auto',flex:1}},
+            React.createElement('table',{style:{width:'100%',borderCollapse:'collapse',fontSize:11}},
+              React.createElement('thead',null,
+                React.createElement('tr',{style:{background:'#1e293b',position:'sticky',top:0,zIndex:1}},
+                  React.createElement('th',{style:{padding:'6px 10px',textAlign:'left',color:C2.sub,fontWeight:600,borderBottom:'1px solid '+C2.bd,minWidth:80}},'부품'),
+                  workers.map(function(w){
+                    return React.createElement('th',{key:w.id,style:{padding:'6px 8px',textAlign:'right',color:C2.sub,fontWeight:600,borderBottom:'1px solid '+C2.bd,minWidth:75}},w.name);
+                  }),
+                )
+              ),
+              React.createElement('tbody',null,
+                resultParts.map(function(part){
+                  return React.createElement('tr',{key:part.id,style:{borderBottom:'1px solid #0f172a'}},
+                    React.createElement('td',{style:{padding:'5px 10px',color:'#e2e8f0',fontWeight:500}},part.name),
+                    workers.map(function(w){
+                      var cell=lineResults.matrix[part.id]&&lineResults.matrix[part.id][w.id];
+                      return React.createElement('td',{key:w.id,style:{padding:'5px 8px',textAlign:'right'}},
+                        cell
+                          ?React.createElement('div',{style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:1}},
+                            React.createElement('span',{style:{color:'#22c55e',fontWeight:600}},fmtD(cell.avg)),
+                            cell.count>1&&React.createElement('span',{style:{fontSize:9,color:C2.sub}},cell.count+'회 평균')
+                          )
+                          :React.createElement('span',{style:{color:'#1e293b'}},'-')
+                      );
+                    }),
+                  );
+                }),
+                // 합계 행
+                React.createElement('tr',{style:{background:'#1e293b',borderTop:'2px solid '+C2.bd}},
+                  React.createElement('td',{style:{padding:'6px 10px',color:'#fff',fontWeight:700}},'합계'),
+                  workers.map(function(w){
+                    var total=lineResults.workerTotals[w.id]||0;
+                    var over=taktTime>0&&total>taktTime;
+                    return React.createElement('td',{key:w.id,style:{padding:'6px 8px',textAlign:'right',fontWeight:700,color:over?C2.red:'#22c55e'}},
+                      total>0?fmtD(total):'-'
+                    );
+                  }),
+                ),
+                // 효율 행
+                taktTime>0&&React.createElement('tr',{style:{background:'rgba(59,130,246,0.05)'}},
+                  React.createElement('td',{style:{padding:'4px 10px',color:C2.sub,fontSize:10}},'택트 대비'),
+                  workers.map(function(w){
+                    var total=lineResults.workerTotals[w.id]||0;
+                    var eff=taktTime>0&&total>0?total/taktTime*100:0;
+                    var cl=eff>100?C2.red:eff>80?'#22c55e':C2.sub;
+                    return React.createElement('td',{key:w.id,style:{padding:'4px 8px',textAlign:'right',fontSize:11,fontWeight:600,color:cl}},
+                      total>0?eff.toFixed(0)+'%':'-'
+                    );
+                  }),
+                ),
+              ),
+            )
+          ),
+        React.createElement('div',{style:{padding:'8px 12px',fontSize:10,color:'#334155',borderTop:'1px solid '+C2.bd,flexShrink:0,lineHeight:1.5}},
+          '※ 작업배분/배치실험 탭에서 라인 밸런스 야마즈미 차트를 확인하세요.',
+          React.createElement('br',null),
+          '영상은 세션 종료 시 재선택이 필요합니다. 마크 데이터는 자동 저장됩니다.',
+        ),
+      ),
+    ),
+  );
+}
+
 function App() {
   const videoRef=useRef(null), fileInputRef=useRef(null), jsonInputRef=useRef(null), videoAddRef=useRef(null), rafRef=useRef(null), loopRef=useRef(null);
 
@@ -9699,6 +10295,10 @@ function App() {
   const [selectedPartId, setSelectedPartId] = useState(null);
   const [showAdvCols,   setShowAdvCols]   = useState(function(){return localStorage.getItem('wvas_adv_cols')==='true';});
   const [yamaAssignments,setYamaAssignments]=useState({});
+  const [lineYamaData,setLineYamaData]=useState({workers:[],tasks:[]});
+  const lineSnapshotRef=React.useRef(null);
+  const [lineProjectToLoad,setLineProjectToLoad]=useState(null);
+  const [activeHand,setActiveHand]=useState('LH');
   const [wheelStep,setWheelStep]= useState(.030);
   const [dirHandle,      setDirHandle]      = useState(null);
   const [showFileMgr,    setShowFileMgr]    = useState(false);
@@ -9836,7 +10436,7 @@ function App() {
       const cycle1Tasks=prev.filter(t=>(t.cycle||1)===1).sort((a,b)=>a.startTime-b.startTime);
       const tmpl=currentCycle>1?(cycle1Tasks[cycleTaskCount]||null):null;
       const color=tmpl?tmpl.color:TASK_COLORS[cycleTaskCount%TASK_COLORS.length];
-      const newTask={id:uid(),name:tmpl?tmpl.name:`작업 ${cycleTaskCount+1}`,type:tmpl?tmpl.type:'value-added',color,cycle:currentCycle,startTime:pending,endTime,duration:endTime-pending,note:'',worker:activeWorker,partId:tmpl?tmpl.partId:(selectedPartId||null)};
+      const newTask={id:uid(),name:tmpl?tmpl.name:`작업 ${cycleTaskCount+1}`,type:tmpl?tmpl.type:'value-added',color,cycle:currentCycle,hand:activeHand,startTime:pending,endTime,duration:endTime-pending,note:'',worker:activeWorker,partId:tmpl?tmpl.partId:(selectedPartId||null)};
       return [...prev,newTask].sort((a,b)=>a.startTime-b.startTime);
     });
     setPending(null);
@@ -10419,7 +11019,98 @@ function App() {
     setVideos([]);setActiveVideoId(null);setVideoSrc(null);setVideoName('');
     setTasks([]);setPending(null);setActiveTask(null);setAnalysisName('');
     setCurrentCycle(1);setSelectedPartId(null);
+    setLineProjectToLoad({_clear:true});
     setTab('analysis');
+  }
+  async function saveUnifiedProject(){
+    if(!window.showDirectoryPicker){alert('Chrome/Edge 브라우저에서만 지원됩니다.');return;}
+    var lineSnap=lineSnapshotRef.current||{};
+    var hasA=tasks.length>0||videos.some(function(v){return(v.tasks||[]).length>0;});
+    var hasL=(lineSnap.workers||[]).length>0;
+    if(!hasA&&!hasL){alert('저장할 분석 데이터가 없습니다.');return;}
+    try{
+      var dh=await window.showDirectoryPicker({mode:'readwrite',startIn:'downloads'});
+      var videosMeta=[];
+      for(var i=0;i<videos.length;i++){
+        var v=videos[i];var vTasks=v.id===activeVideoId?tasks:(v.tasks||[]);var savedFile=null;
+        if(v.src&&v.src.startsWith('blob:')){
+          try{
+            savedFile='analysis_'+i+(v.name?'_'+v.name.replace(/[<>:"\/\\|?*]/g,'_'):'_.mp4');
+            var resp=await fetch(v.src);var blob=await resp.blob();
+            var fh=await dh.getFileHandle(savedFile,{create:true});
+            var wr=await fh.createWritable();await wr.write(blob);await wr.close();
+          }catch(ve){savedFile=null;}
+        }
+        videosMeta.push({id:v.id,name:v.name,fps:v.fps||fps,completed:v.completed,tasks:vTasks,savedFile:savedFile});
+      }
+      var lineVFN={};var lineVDN={};
+      var lwVideos=lineSnap.workerVideos||{};
+      for(var wid of Object.keys(lwVideos)){
+        var wv=lwVideos[wid];
+        if(wv&&wv.src&&wv.src.startsWith('blob:')){
+          var sn='line_'+wid+(wv.name?'_'+wv.name.replace(/[<>:"\/\\|?*]/g,'_'):'_.mp4');
+          try{
+            var r2=await fetch(wv.src);var b2=await r2.blob();
+            var f2=await dh.getFileHandle(sn,{create:true});
+            var w2=await f2.createWritable();await w2.write(b2);await w2.close();
+            lineVFN[wid]=sn;lineVDN[wid]=wv.name;
+          }catch{}
+        }
+      }
+      var mName=lineSnap.modelName||analysisName||'project';
+      var pdata={version:4,type:'project',savedAt:new Date().toISOString(),modelName:mName,
+        analysis:{analysisName:analysisName,videoName:videoName,fps:fps,tasks:tasks,
+          videos:videosMeta,activeVideoId:activeVideoId,selectedPartId:selectedPartId,taktTime:taktTime},
+        lineanalysis:{modelName:lineSnap.modelName||'',workers:lineSnap.workers||[],
+          workerTasks:lineSnap.workerTasks||{},workerVideoFileNames:lineVFN,workerVideoDisplayNames:lineVDN}};
+      var jfh=await dh.getFileHandle('project.json',{create:true});
+      var jwr=await jfh.createWritable();
+      await jwr.write(JSON.stringify(pdata,null,2));await jwr.close();
+      var tot=videosMeta.filter(function(v){return v.savedFile;}).length+Object.keys(lineVFN).length;
+      alert('프로젝트 저장 완료!\n폴더: '+dh.name+(tot>0?'\n영상 '+tot+'개 포함':''));
+    }catch(e){if(e.name!=='AbortError')alert('저장 실패: '+e.message);}
+  }
+  async function loadUnifiedProject(){
+    if(!window.showDirectoryPicker){alert('Chrome/Edge 브라우저에서만 지원됩니다.');return;}
+    try{
+      var dh=await window.showDirectoryPicker({mode:'readwrite'});
+      var jfh=await dh.getFileHandle('project.json');
+      var jf=await jfh.getFile();
+      var pdata=JSON.parse(await jf.text());
+      var an=pdata.analysis||pdata;
+      if(Array.isArray(an.videos)&&an.videos.length>0){
+        var rv=[];
+        for(var vm of an.videos){
+          var bs=null;
+          if(vm.savedFile){try{var vfh=await dh.getFileHandle(vm.savedFile);var vf=await vfh.getFile();bs=URL.createObjectURL(vf);}catch{}}
+          rv.push(Object.assign({},vm,{src:bs}));
+        }
+        setVideos(rv);
+        var av=rv.find(function(v){return v.id===an.activeVideoId;})||rv[0];
+        setActiveVideoId(av.id);setVideoSrc(av.src||null);setVideoName(av.name);
+        setTasks(av.tasks||[]);setFps(av.fps||30);
+      }else if(Array.isArray(an.tasks)){
+        setVideos([]);setActiveVideoId(null);setTasks(an.tasks);
+        if(an.videoName)setVideoName(an.videoName);if(an.fps)setFps(an.fps);
+      }else{setVideos([]);setActiveVideoId(null);setTasks([]);}
+      if(an.analysisName!==undefined)setAnalysisName(an.analysisName);
+      if(an.taktTime)setTaktTime(an.taktTime);
+      if(an.selectedPartId!==undefined)setSelectedPartId(an.selectedPartId);
+      setPending(null);setActiveTask(null);loopRef.current=null;setCurrentCycle(1);
+      var ln=pdata.lineanalysis||{};
+      var newWV={};
+      for(var wid2 of Object.keys(ln.workerVideoFileNames||{})){
+        var fn=ln.workerVideoFileNames[wid2];
+        try{var vfh2=await dh.getFileHandle(fn);var vf2=await vfh2.getFile();
+          var bs2=URL.createObjectURL(vf2);
+          newWV[wid2]={name:(ln.workerVideoDisplayNames||{})[wid2]||fn,src:bs2};
+        }catch{}
+      }
+      setLineProjectToLoad({workers:ln.workers||[],workerTasks:ln.workerTasks||{},
+        modelName:ln.modelName||pdata.modelName||'',workerVideos:newWV});
+      var tot2=(an.videos||[]).filter(function(v){return v.savedFile;}).length+Object.keys(newWV).length;
+      alert('프로젝트 불러오기 완료!'+(tot2>0?'\n영상 '+tot2+'개 복원':''));
+    }catch(e){if(e.name!=='AbortError')alert('불러오기 실패: '+e.message);}
   }
   function loadProjectData(data){
     try{
@@ -10460,10 +11151,10 @@ function App() {
           showMenu&&React.createElement(ProjectMenuDropdown,{
             lang,
             onNew:function(){setShowMenu(false);newProject();},
-            onLoad:function(){setShowMenu(false);setShowLoadProject(true);},
+            onLoad:function(){setShowMenu(false);loadUnifiedProject();},
             onSettings:function(){setShowMenu(false);setShowSettings(true);},
             onClose:function(){setShowMenu(false);},
-            onSave:saveToStorage,
+            onSave:saveUnifiedProject,
             onSession:function(){refreshSessions();setShowSessionMgr(true);},
             onFile:function(){setShowFileMgr(true);},
             onCsv:exportCSV, hasCsv:tasks.length>0,
@@ -10846,7 +11537,46 @@ function App() {
               React.createElement('span',{className:'text-xs text-slate-500'},
                 `(${tasks.filter(function(t){return(t.cycle||1)===currentCycle;}).length}개 마크됨)`),
             ),
-            // Row 4: file
+            // Row 3c: LH/RH hand track
+            React.createElement('div',{style:{paddingTop:6,borderTop:'1px solid #1e293b'}},
+              React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6,marginBottom:4}},
+                React.createElement('span',{style:{fontSize:10,color:'#64748b'}},'손:'),
+                ['LH','RH'].map(function(h){
+                  return React.createElement('button',{key:h,
+                    onClick:function(){
+                      setActiveHand(h);
+                      if(h==='RH'){var v=videoRef.current;if(v){v.currentTime=0;v.pause();}setPending(null);}
+                    },
+                    style:{padding:'2px 10px',fontSize:11,borderRadius:4,border:'1px solid',cursor:'pointer',
+                           background:activeHand===h?(h==='LH'?'#1d4ed8':'#15803d'):'#1e293b',
+                           color:activeHand===h?'#fff':'#64748b',
+                           borderColor:activeHand===h?(h==='LH'?'#3b82f6':'#22c55e'):'#334155'}},
+                    h==='LH'?'🤚 LH':'✋ RH');
+                }),
+                activeHand==='RH'&&React.createElement('span',{style:{fontSize:10,color:'#86efac'}},'← RH 모드: 영상 처음부터 재마킹'),
+              ),
+              React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:2}},
+                [['LH','#3b82f6'],['RH','#22c55e']].map(function(pair){
+                  var h=pair[0],col=pair[1];
+                  var ht=tasks.filter(function(t){return t.hand===h;});
+                  var dur=duration||1;
+                  var total=ht.reduce(function(s,t){return s+(t.duration||0);},0);
+                  return React.createElement('div',{key:h,style:{display:'flex',alignItems:'center',gap:4}},
+                    React.createElement('span',{style:{fontSize:9,color:col,width:18,fontWeight:700,flexShrink:0}},h),
+                    React.createElement('div',{style:{flex:1,height:10,background:'#0f172a',borderRadius:2,position:'relative',overflow:'hidden',border:'1px solid #1e293b'}},
+                      ht.map(function(t){
+                        return React.createElement('div',{key:t.id,style:{
+                          position:'absolute',left:((t.startTime/dur)*100)+'%',
+                          width:Math.max(0.5,(t.duration/dur)*100)+'%',
+                          height:'100%',background:col,opacity:0.85,borderRadius:1
+                        }});
+                      })
+                    ),
+                    React.createElement('span',{style:{fontSize:9,color:'#64748b',width:36,textAlign:'right',fontFamily:'monospace',flexShrink:0}},fmt(total)),
+                  );
+                })
+              ),
+            ),            // Row 4: file
             React.createElement('div',{className:'flex items-center pt-1 border-t border-slate-700 gap-1'},
               React.createElement('span',{className:'text-xs text-slate-600 truncate flex-1'},videoName),
               React.createElement('button',{className:'btn btn-slate text-xs px-2 py-0.5',onClick:()=>fileInputRef.current?.click()},'📂 교체'),
@@ -11220,38 +11950,59 @@ function App() {
       tab==='__visionResult'&&React.createElement(VisionResultPanel,{results:visionResults}),
       tab==='line'&&React.createElement(LinePredict,{parts:parts}),
 
-      // ══ YAMAZUMI TAB ══
-      tab==='yamazumi'&&React.createElement(Yamazumi,{tasks:tasks,setTasks:setTasks,workers:workers,taktTime:taktTime,setTaktTime:setTaktTime,ratingFactor:ratingFactor,allowanceRate:allowanceRate,allVideos:videos,activeVideoId:activeVideoId,parts:parts,selectedPartId:selectedPartId,yamaAssignments:yamaAssignments,setYamaAssignments:setYamaAssignments}),
+      // ══ LINE ANALYSIS TAB ══
+      tab==='lineanalysis'&&React.createElement(LineAnalysisPanel,{
+        parts:parts,
+        taktTime:taktTime,
+        onDataChange:function(d){setLineYamaData(d);},
+        snapshotRef:lineSnapshotRef,
+        projectToLoad:lineProjectToLoad,
+        onProjectLoaded:function(){setLineProjectToLoad(null);},
+        onSaveProject:saveUnifiedProject,
+        onLoadProject:loadUnifiedProject,
+        onNewProject:newProject,
+      }),
 
-      // ══ SIM TAB ══
+      // ══ YAMAZUMI TAB ══
       (function(){
-        var isMultiSim=videos.length>1;
-        var simWorkers=isMultiSim
-          ?videos.filter(function(v){return (v.id===activeVideoId?tasks:(v.tasks||[])).length>0;})
-              .map(function(v){return {id:v.id,name:v.label||v.name.replace(/\.[^.]+$/,'')};})
-          :null;
-        var simTasks=isMultiSim
-          ?(function(){
-              var merged=[];
-              videos.forEach(function(v){
-                var vt=v.id===activeVideoId?tasks:(v.tasks||[]);
-                var nm={};
-                vt.forEach(function(t){
-                  var k=v.id+'__'+t.name;
-                  if(!nm[k])nm[k]={id:k,name:t.name,type:t.type,color:t.color,durations:[]};
-                  nm[k].durations.push(t.duration);
-                });
-                Object.values(nm).forEach(function(x){
-                  var avg=x.durations.reduce(function(s,d){return s+d;},0)/x.durations.length;
-                  merged.push({id:x.id,name:x.name,type:x.type,color:x.color,
-                    duration:parseFloat(avg.toFixed(2)),worker:yamaAssignments[x.id]||v.id,
-                    startTime:0,endTime:avg,cycle:1});
-                });
-              });
-              return merged;
-            })()
-          :null;
-        return tab==='sim'&&React.createElement(WorkerSim,{tasks:tasks,setTasks:setTasks,workers:workers,taktTime:taktTime,simTasks:simTasks,simWorkers:simWorkers});
+        var lyTasks=lineYamaData.tasks;
+        var lyWorkers=lineYamaData.workers;
+        var hasLineData=lyTasks.length>0&&lyWorkers.length>0;
+        if(!hasLineData&&tab==='yamazumi'){
+          return React.createElement('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',gap:16,color:'#64748b'}},
+            React.createElement('div',{style:{fontSize:40}},'📊'),
+            React.createElement('div',{style:{fontSize:15,color:'#94a3b8'}},'라인 분석 데이터가 없습니다'),
+            React.createElement('div',{style:{fontSize:12,color:'#475569',textAlign:'center',maxWidth:320,lineHeight:1.6}},'📊 라인 분석 탭에서 각 작업자의 영상을 업로드하고 부품별 마크를 완료하면 여기서 야마즈미 차트를 확인할 수 있습니다.'),
+          );
+        }
+        return tab==='yamazumi'&&React.createElement(Yamazumi,{
+          tasks:lyTasks,setTasks:function(){},
+          workers:lyWorkers,
+          taktTime:taktTime,setTaktTime:setTaktTime,
+          ratingFactor:ratingFactor,allowanceRate:allowanceRate,
+          allVideos:[],activeVideoId:null,
+          parts:parts,selectedPartId:null,
+          yamaAssignments:{},setYamaAssignments:function(){},
+        });
+      })(),
+
+      // ══ SIM TAB (라인 분석 데이터 사용) ══
+      (function(){
+        var lyTasks2=lineYamaData.tasks;
+        var lyWorkers2=lineYamaData.workers;
+        var hasLineData2=lyTasks2.length>0&&lyWorkers2.length>0;
+        if(!hasLineData2&&tab==='sim'){
+          return React.createElement('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',gap:16,color:'#64748b'}},
+            React.createElement('div',{style:{fontSize:40}},'🔀'),
+            React.createElement('div',{style:{fontSize:15,color:'#94a3b8'}},'라인 분석 데이터가 없습니다'),
+            React.createElement('div',{style:{fontSize:12,color:'#475569',textAlign:'center',maxWidth:320,lineHeight:1.6}},'📊 라인 분석 탭에서 각 작업자의 영상을 업로드하고 부품별 마크를 완료하면 여기서 배치실험을 진행할 수 있습니다.'),
+          );
+        }
+        return tab==='sim'&&React.createElement(WorkerSim,{
+          tasks:lyTasks2,setTasks:function(){},
+          workers:lyWorkers2,taktTime:taktTime,
+          simTasks:lyTasks2,simWorkers:lyWorkers2,
+        });
       })(),
 
             // ══ STATS TAB ══
@@ -11301,7 +12052,39 @@ function App() {
           ),
         ),
 
-        // Gantt content
+        // HBR card
+        (function(){
+          var lhTime=tasks.filter(function(t){return t.hand==='LH';}).reduce(function(s,t){return s+(t.duration||0);},0);
+          var rhTime=tasks.filter(function(t){return t.hand==='RH';}).reduce(function(s,t){return s+(t.duration||0);},0);
+          if(!lhTime&&!rhTime) return null;
+          var maxT=Math.max(lhTime,rhTime);
+          var hbr=maxT>0?1-Math.abs(lhTime-rhTime)/maxT:1;
+          var hbrPct=Math.round(hbr*100);
+          var hbrColor=hbrPct>=80?'#22c55e':hbrPct>=60?'#f59e0b':'#ef4444';
+          var diff=Math.abs(lhTime-rhTime);
+          var weakSide=lhTime<rhTime?'LH 왼손':'RH 오른손';
+          return React.createElement('div',{style:{display:'flex',alignItems:'center',gap:16,padding:'8px 16px',background:'#0a1020',borderBottom:'1px solid #1e293b',flexShrink:0,flexWrap:'wrap'}},
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},
+              React.createElement('span',{style:{fontSize:12,fontWeight:700,color:'#94a3b8'}},'⚖ 양손 균형도 (HBR)'),
+              React.createElement('span',{style:{fontSize:22,fontWeight:900,color:hbrColor,fontFamily:'monospace'}},hbrPct+'%'),
+              hbrPct<80&&React.createElement('span',{style:{fontSize:11,color:'#fca5a5',background:'rgba(127,29,29,0.4)',border:'1px solid rgba(239,68,68,0.4)',borderRadius:4,padding:'2px 8px'}},
+                '⚠ '+weakSide+' '+fmt(diff)+' 부족 → 공정 재설계 권장'
+              ),
+            ),
+            React.createElement('div',{style:{flex:1,minWidth:200,maxWidth:360}},
+              [['LH',lhTime,'#3b82f6'],['RH',rhTime,'#22c55e']].map(function(row){
+                var label=row[0],t=row[1],col=row[2];
+                return React.createElement('div',{key:label,style:{display:'flex',alignItems:'center',gap:6,marginBottom:3}},
+                  React.createElement('span',{style:{fontSize:10,color:col,width:28,fontWeight:700,flexShrink:0}},label),
+                  React.createElement('div',{style:{flex:1,height:8,background:'#1e293b',borderRadius:4,overflow:'hidden'}},
+                    React.createElement('div',{style:{width:(maxT>0?t/maxT*100:0)+'%',height:'100%',background:col,borderRadius:4,minWidth:t>0?2:0}})
+                  ),
+                  React.createElement('span',{style:{fontSize:10,color:'#94a3b8',width:44,textAlign:'right',flexShrink:0,fontFamily:'monospace'}},fmt(t)),
+                );
+              })
+            ),
+          );
+        })(),        // Gantt content
         React.createElement('div',{className:'flex-1 overflow-hidden flex flex-col'},
           // Timeline view
           ganttView==='timeline'&&React.createElement(React.Fragment,null,
