@@ -9858,6 +9858,13 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
   }
   function deleteMark(taskId){
     if(!activeWorkerId) return;
+    var del=(workerTasks[activeWorkerId]||[]).find(function(t){return t.id===taskId;});
+    if(del&&videoRef.current){
+      videoRef.current.currentTime=del.startTime;
+      videoRef.current.pause();
+      setLineVideoCurrentTime(del.startTime);
+      setPending(null);
+    }
     setWorkerTasks(function(p){
       return Object.assign({},p,{[activeWorkerId]:(p[activeWorkerId]||[]).filter(function(t){return t.id!==taskId;})});
     });
@@ -11975,14 +11982,21 @@ function App() {
             React.createElement('div',{style:{fontSize:12,color:'#475569',textAlign:'center',maxWidth:320,lineHeight:1.6}},'📊 라인 분석 탭에서 각 작업자의 영상을 업로드하고 부품별 마크를 완료하면 여기서 야마즈미 차트를 확인할 수 있습니다.'),
           );
         }
+        var lyTasksA=lyTasks.map(function(t){return yamaAssignments[t.id]?Object.assign({},t,{worker:yamaAssignments[t.id]}):t;});
+        function lineSetTasks(updater){
+          var upd=updater(lyTasksA);
+          var na=Object.assign({},yamaAssignments);
+          upd.forEach(function(t){var orig=lyTasks.find(function(o){return o.id===t.id;});if(orig){if(t.worker!==orig.worker){na[t.id]=t.worker;}else{delete na[t.id];}}});
+          setYamaAssignments(na);
+        }
         return tab==='yamazumi'&&React.createElement(Yamazumi,{
-          tasks:lyTasks,setTasks:function(){},
+          tasks:lyTasksA,setTasks:lineSetTasks,
           workers:lyWorkers,
           taktTime:taktTime,setTaktTime:setTaktTime,
           ratingFactor:ratingFactor,allowanceRate:allowanceRate,
           allVideos:[],activeVideoId:null,
           parts:parts,selectedPartId:null,
-          yamaAssignments:{},setYamaAssignments:function(){},
+          yamaAssignments:yamaAssignments,setYamaAssignments:setYamaAssignments,
         });
       })(),
 
