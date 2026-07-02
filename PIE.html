@@ -1302,6 +1302,23 @@ async function syncToGoogleSheet(payload) {
 }
 
 
+// ── Google Sheets 데이터 읽기 (부품관리 동기화용) ──
+const GAS_IMPORT_KEY = 'wvas_gas_imported';
+function gasImportedLoad(){try{return new Set(JSON.parse(localStorage.getItem(GAS_IMPORT_KEY)||'[]'));}catch{return new Set();}}
+function gasImportedSave(s){localStorage.setItem(GAS_IMPORT_KEY,JSON.stringify([...s].slice(-2000)));}
+async function fetchFromGoogleSheet(){
+  if(!navigator.onLine) return{ok:false,reason:'오프라인'};
+  const url=getGasUrl();
+  if(!url) return{ok:false,reason:'GAS URL이 설정되지 않았습니다.'};
+  try{
+    const res=await fetch(url,{method:'GET',signal:AbortSignal.timeout(15000)});
+    const json=await res.json();
+    return{ok:true,rows:json.rows||[]};
+  }catch(err){
+    return{ok:false,reason:err.message};
+  }
+}
+
 /* ── utils.js ── */
 function fmt(sec, ms=true) {
   if (!isFinite(sec)||sec<0) return ms?'00:00:00.000':'00:00:00';
@@ -5126,7 +5143,8 @@ function PartsManager({parts,onPartsChange}){
   var _pt=useState('history'); var ptab=_pt[0],setPtab=_pt[1];
   var _sr=useState('');    var search=_sr[0],setSearch=_sr[1];
   var _ps=useState(partStLoad); var partSt=_ps[0],setPartSt=_ps[1];
-  var _pr=useState(partResetLoad); var partReset=_pr[0],setPartReset=_pr[1];
+  var _pr=useState(partResetLoad);
+  var _rfx=useState('idle'); var refreshStatus=_rfx[0],setRefreshStatus=_rfx[1]; var partReset=_pr[0],setPartReset=_pr[1];
 
   var _as=useState(function(){return lsList().map(function(m){return lsGet(m.id);}).filter(Boolean);});
   var allSessions=_as[0]; var setAllSessions=_as[1];
@@ -5249,6 +5267,42 @@ function PartsManager({parts,onPartsChange}){
     };
     input.click();
   }
+async function gasRefresh(){
+  var url=getGasUrl();
+  if(!url){alert('GAS URL이 설정되지 않았습니다.\n설정 > Google Sheets URL을 먼저 입력하세요.');return;}
+  if(!navigator.onLine){alert('오프라인 상태입니다.\n인터넷 연결 후 다시 시도하세요.');return;}
+  setRefreshStatus('loading');
+  var result=await fetchFromGoogleSheet();
+  if(!result.ok){setRefreshStatus('error');alert('구글 시트 연결 실패:\n'+result.reason);return;}
+  var rows=result.rows||[];
+  if(!rows.length){setRefreshStatus('done:0');alert('구글 시트에 데이터가 없습니다.');return;}
+  var imported=gasImportedLoad();
+  var newRows=rows.filter(function(r){
+    var key=[r['부품명']||'',r['작업요소']||'',String(r['기록시각']||r['날짜']||'')].join(':');
+    return !imported.has(key);
+  });
+  if(!newRows.length){setRefreshStatus('done:0');alert('새로 추가된 데이터가 없습니다.\n(이미 동기화된 데이터입니다)');return;}
+  var currentParts=parts.slice();var db=partStLoad();var addedCount=0;
+  newRows.forEach(function(r){
+    var pName=String(r['부품명']||'').trim();
+    var tName=String(r['작업요소']||'').trim();
+    var stVal=parseFloat(r['표준시간(ST)']||0);
+    var nVal=parseInt(r['사이클수']||1)||1;
+    if(!pName||!tName||!stVal) return;
+    var part=currentParts.find(function(p){return (p.name||'').toLowerCase()===pName.toLowerCase();});
+    if(!part){part={id:'gas_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:pName,insertType:'Axial',leadCount:''};currentParts.push(part);}
+    if(!db[part.id]) db[part.id]={};
+    if(db[part.id][tName]){var o=db[part.id][tName];var oN=o.n||1;db[part.id][tName]={st:parseFloat(((o.st*oN+stVal*nVal)/(oN+nVal)).toFixed(4)),n:oN+nVal,updatedAt:new Date().toISOString()};}
+    else{db[part.id][tName]={st:parseFloat(stVal.toFixed(4)),n:nVal,updatedAt:new Date().toISOString()};}
+    var key=[r['부품명']||'',r['작업요소']||'',String(r['기록시각']||r['날짜']||'')].join(':');
+    imported.add(key);addedCount++;
+  });
+  partsSave(currentParts);onPartsChange(currentParts);
+  partStSave(db);setPartSt(db);
+  gasImportedSave(imported);
+  setRefreshStatus('done:'+addedCount);
+  alert('동기화 완료!\n새 항목 '+addedCount+'개 추가됨\n(총 '+rows.length+'개 행 처리)');
+}
   function stCalc(durs){
     var n=durs.length;
     if(!n) return{n:0,avg:0,min:0,max:0,std:0};
@@ -5274,7 +5328,14 @@ function PartsManager({parts,onPartsChange}){
     React.createElement('div',{style:HDR},
       React.createElement('span',{style:{fontSize:14,fontWeight:700,color:'#fff'}},'🔧 부품 마스터 관리'),
       React.createElement('div',{style:{display:'flex',gap:6}},
-        React.createElement('button',{className:'btn btn-slate',style:{fontSize:11},onClick:importPartsDb},'📥 가져오기'),
+        React.createElement('button',{className:'btn btn-slate',style:{fontSize:11,
+    background:refreshStatus==='loading'?'#1e3a5f':refreshStatus.startsWith('done:')&&refreshStatus!=='done:0'?'#14532d':refreshStatus==='error'?'#7f1d1d':undefined,
+    color:refreshStatus==='loading'?'#93c5fd':refreshStatus.startsWith('done:')&&refreshStatus!=='done:0'?'#86efac':refreshStatus==='error'?'#fca5a5':undefined},
+  onClick:function(){if(refreshStatus!=='loading')gasRefresh();},
+  disabled:refreshStatus==='loading',
+  title:'구글 시트 누적 ST를 가져와 로컬에 병합합니다'},
+  refreshStatus==='loading'?'⏳ 동기화 중...':refreshStatus.startsWith('done:')&&refreshStatus!=='done:0'?'✅ 동기화 완료':'🔄 구글시트 동기화'),
+React.createElement('button',{className:'btn btn-slate',style:{fontSize:11},onClick:importPartsDb},'📥 가져오기'),
         React.createElement('button',{className:'btn btn-slate',style:{fontSize:11},onClick:exportPartsDb},'📤 내보내기'),
         React.createElement('button',{className:'btn btn-blue',style:{fontSize:12},onClick:startAdd},'+ 부품 추가'),
       ),
