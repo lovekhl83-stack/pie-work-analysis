@@ -10092,13 +10092,13 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
                   onWheel:handleVideoWheel,
                   style:{position:'absolute',inset:0,cursor:'crosshair'}
                 },
-                  pending!==null&&React.createElement('div',{style:{position:'absolute',top:6,left:6,background:'rgba(220,38,38,0.85)',color:'#fff',fontSize:10,padding:'2px 8px',borderRadius:10,pointerEvents:'none'}},
-                    '● IN '+pending.toFixed(2)+'s'
+                  pending!==null&&React.createElement('div',{style:{position:'absolute',top:6,left:6,background:'rgba(220,38,38,0.92)',color:'#fff',fontSize:15,fontWeight:700,padding:'6px 16px',borderRadius:14,pointerEvents:'none',boxShadow:'0 2px 12px rgba(0,0,0,0.7)',letterSpacing:.5}},
+                    '⏺ IN '+pending.toFixed(2)+'s'
                   ),
-                  React.createElement('div',{style:{position:'absolute',bottom:4,left:0,right:0,textAlign:'center',fontSize:9,color:'rgba(255,255,255,0.45)',pointerEvents:'none'}},
+                  React.createElement('div',{style:{position:'absolute',bottom:0,left:0,right:0,padding:'10px 0 6px',background:'linear-gradient(transparent,rgba(0,0,0,0.82))',textAlign:'center',fontSize:12,color:'rgba(255,255,255,0.88)',pointerEvents:'none',letterSpacing:.2}},
                     pending===null
-                      ?'좌클릭: 시작 마크  |  우클릭: '+(lineVideoPlaying?'정지':'재생')+'  |  휠: 미세이동'
-                      :'IN '+pending.toFixed(2)+'s 기록됨  —  좌클릭: 종료 마크  |  우클릭: '+(lineVideoPlaying?'정지':'재생')
+                      ?'좌클릭: 시작 마크  ·  우클릭: '+(lineVideoPlaying?'정지':'재생')+'  ·  휠: 미세이동'
+                      :'⏺ IN '+pending.toFixed(2)+'s 기록됨 — 좌클릭: 종료 마크 찍기'
                   ),
                   React.createElement('div',{style:{position:'absolute',top:6,right:6,display:'flex',gap:4}},
                     React.createElement('span',{style:{fontSize:9,color:'#94a3b8',background:'rgba(0,0,0,0.7)',padding:'2px 5px',borderRadius:3}},activeVideo.name),
@@ -10117,16 +10117,24 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
                 style:{padding:'6px 16px',background:C2.accent,color:'#fff',border:'none',borderRadius:6,cursor:'pointer',fontSize:12}
               },'📁 영상 선택'),
             ),
-          activeVideo&&lineVideoDuration>0&&React.createElement('div',{style:{padding:'3px 8px',background:'#0a1020',flexShrink:0}},
-            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:6}},
-              React.createElement('span',{style:{fontSize:9,color:'#475569',minWidth:38}},
+          activeVideo&&lineVideoDuration>0&&React.createElement('div',{style:{padding:'5px 10px',background:'#0a1020',flexShrink:0}},
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},
+              React.createElement('span',{style:{fontSize:10,color:'#64748b',minWidth:44}},
                 lineVideoCurrentTime>=60?Math.floor(lineVideoCurrentTime/60)+'m'+(lineVideoCurrentTime%60).toFixed(1)+'s':lineVideoCurrentTime.toFixed(2)+'s'
               ),
-              React.createElement('input',{type:'range',min:0,max:lineVideoDuration,step:0.001,value:lineVideoCurrentTime,
-                onChange:function(e){var t=parseFloat(e.target.value);if(videoRef.current)videoRef.current.currentTime=t;setLineVideoCurrentTime(t);},
-                style:{flex:1,accentColor:C2.accent,height:3,cursor:'pointer'}
-              }),
-              React.createElement('span',{style:{fontSize:9,color:'#475569',minWidth:38,textAlign:'right'}},
+              React.createElement('div',{style:{flex:1,position:'relative',height:20,display:'flex',alignItems:'center'}},
+                React.createElement('input',{type:'range',min:0,max:lineVideoDuration,step:0.001,value:lineVideoCurrentTime,
+                  onChange:function(e){var v=parseFloat(e.target.value);if(videoRef.current)videoRef.current.currentTime=v;setLineVideoCurrentTime(v);},
+                  style:{position:'absolute',left:0,right:0,width:'100%',accentColor:C2.accent,height:5,cursor:'pointer',margin:0,zIndex:2}
+                }),
+                activeTasks.map(function(tk){
+                  var ls=(tk.startTime/lineVideoDuration)*100;
+                  var w=Math.max((tk.endTime-tk.startTime)/lineVideoDuration*100,0.6);
+                  return React.createElement('div',{key:tk.id,style:{position:'absolute',left:ls+'%',width:w+'%',height:8,background:'rgba(34,197,94,0.55)',borderRadius:2,top:'50%',transform:'translateY(-50%)',pointerEvents:'none',zIndex:1}});
+                }),
+                pending!==null&&React.createElement('div',{style:{position:'absolute',left:((pending/lineVideoDuration)*100)+'%',width:3,height:14,background:'#ef4444',borderRadius:2,top:'50%',transform:'translateY(-50%)',pointerEvents:'none',zIndex:3}}),
+              ),
+              React.createElement('span',{style:{fontSize:10,color:'#64748b',minWidth:44,textAlign:'right'}},
                 lineVideoDuration>=60?Math.floor(lineVideoDuration/60)+'m'+(lineVideoDuration%60).toFixed(1)+'s':lineVideoDuration.toFixed(2)+'s'
               ),
             )
@@ -10208,20 +10216,20 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
             React.createElement('button',{
               onClick:markStart,
               disabled:!activeVideo||!activeWorkerId,
-              style:{flex:1,padding:'7px 0',background:pending!==null?'rgba(20,83,45,0.8)':'rgba(30,58,95,0.8)',
+              style:{flex:1,padding:'11px 0',background:pending!==null?'rgba(20,83,45,0.9)':'rgba(30,58,95,0.9)',
                 color:pending!==null?'#86efac':'#93c5fd',
-                border:'1px solid '+(pending!==null?'#166534':'#1e40af'),
-                borderRadius:6,cursor:'pointer',fontSize:12,fontWeight:700,
+                border:'2px solid '+(pending!==null?'#166534':'#1e40af'),
+                borderRadius:8,cursor:'pointer',fontSize:14,fontWeight:700,
                 opacity:(!activeVideo||!activeWorkerId)?0.4:1}
             },pending!==null?'▶ '+pending.toFixed(2)+'s에서 시작':'⏺ 시작 마크 (S)'),
             React.createElement('button',{
               onClick:markEnd,
               disabled:!activeVideo||pending===null,
-              style:{flex:1,padding:'7px 0',
-                background:pending!==null?'rgba(127,29,29,0.8)':'rgba(30,41,59,0.5)',
+              style:{flex:1,padding:'11px 0',
+                background:pending!==null?'rgba(127,29,29,0.9)':'rgba(30,41,59,0.6)',
                 color:pending!==null?'#fca5a5':C2.sub,
-                border:'1px solid '+(pending!==null?'#991b1b':C2.bd),
-                borderRadius:6,cursor:'pointer',fontSize:12,fontWeight:700,
+                border:'2px solid '+(pending!==null?'#991b1b':C2.bd),
+                borderRadius:8,cursor:'pointer',fontSize:14,fontWeight:700,
                 opacity:pending===null?0.4:1}
             },'⏹ 종료 마크 (E)'),
           ),
@@ -10241,25 +10249,25 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
             ?React.createElement('div',{style:{padding:'16px',textAlign:'center',color:C2.sub,fontSize:11}},'시작/종료 마크로 작업 구간을 기록하세요')
             :activeTasks.map(function(t,idx){
               var part=parts.find(function(p){return p.id===t.partId;});
-              return React.createElement('div',{key:t.id,style:{display:'flex',alignItems:'center',gap:5,padding:'4px 8px',borderBottom:'1px solid #0f172a',fontSize:11,background:idx%2?'transparent':'rgba(255,255,255,0.01)'}},
-                React.createElement('span',{style:{color:C2.sub,flexShrink:0,minWidth:14,textAlign:'right',fontSize:9}},idx+1),
-                React.createElement('span',{style:{color:'#3b82f6',flexShrink:0,fontSize:9,minWidth:22,textAlign:'center',background:'rgba(59,130,246,0.1)',borderRadius:3,padding:'0 2px'}},t.cycle||1),
-                React.createElement('span',{style:{color:'#22c55e',flexShrink:0,minWidth:50,fontSize:10}},fmtD(t.duration)),
+              return React.createElement('div',{key:t.id,style:{display:'flex',alignItems:'center',gap:7,padding:'7px 10px',borderBottom:'1px solid #1e293b',fontSize:12,background:idx%2?'transparent':'rgba(255,255,255,0.02)'}},
+                React.createElement('span',{style:{color:C2.sub,flexShrink:0,minWidth:18,textAlign:'right',fontSize:11}},idx+1),
+                React.createElement('span',{style:{color:'#60a5fa',flexShrink:0,fontSize:11,minWidth:24,textAlign:'center',background:'rgba(59,130,246,0.15)',borderRadius:4,padding:'1px 3px',fontWeight:700}},t.cycle||1),
+                React.createElement('span',{style:{color:'#4ade80',flexShrink:0,minWidth:58,fontSize:12,fontWeight:600}},fmtD(t.duration)),
                 React.createElement('select',{
                   value:t.partId||'',
                   onChange:function(e){updateMarkPart(t.id,e.target.value||null);},
-                  style:{flex:1,background:'transparent',color:t.partId?'#e2e8f0':C2.amber,border:'1px solid '+(t.partId?'#1e293b':'rgba(245,158,11,0.4)'),borderRadius:3,padding:'1px 3px',fontSize:10}
+                  style:{flex:1,background:'#1e293b',color:t.partId?'#e2e8f0':C2.amber,border:'1px solid '+(t.partId?'#334155':'rgba(245,158,11,0.5)'),borderRadius:4,padding:'3px 5px',fontSize:11}
                 },
-                  React.createElement('option',{value:''},'미선택'),
+                  React.createElement('option',{value:''},'부품 미선택'),
                   parts.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'','ko');}).map(function(p){
                     return React.createElement('option',{key:p.id,value:p.id},p.name);
                   })
                 ),
-                React.createElement('span',{style:{color:'#475569',fontSize:9,flexShrink:0}},t.startTime.toFixed(1)+'~'+t.endTime.toFixed(1)+'s'),
+                React.createElement('span',{style:{color:'#64748b',fontSize:10,flexShrink:0,minWidth:72,textAlign:'right'}},t.startTime.toFixed(1)+'~'+t.endTime.toFixed(1)+'s'),
                 React.createElement('button',{
                   onClick:function(){deleteMark(t.id);},
-                  style:{background:'transparent',border:'none',color:'#475569',cursor:'pointer',padding:'0 3px',fontSize:11,flexShrink:0}
-                },'×')
+                  style:{background:'rgba(239,68,68,0.12)',border:'1px solid rgba(239,68,68,0.35)',color:'#f87171',cursor:'pointer',padding:'3px 8px',fontSize:12,borderRadius:5,flexShrink:0,fontWeight:700}
+                },'✕')
               );
             })
         ),
