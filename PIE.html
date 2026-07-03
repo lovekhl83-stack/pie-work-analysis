@@ -5338,8 +5338,6 @@ async function gasRefresh(){
 React.createElement('button',{className:'btn btn-green',style:{fontSize:12},
           onClick:function(){partsSave(parts);onPartsChange(parts);alert('부품 목록 저장 완료 ('+parts.length+'개)');},
           title:'현재 부품 목록을 저장합니다'},'💾 저장'),
-        React.createElement('button',{className:'btn btn-slate',style:{fontSize:11},onClick:importPartsDb},'📥 가져오기'),
-        React.createElement('button',{className:'btn btn-slate',style:{fontSize:11},onClick:exportPartsDb},'📤 내보내기'),
         React.createElement('button',{className:'btn btn-blue',style:{fontSize:12},onClick:startAdd},'+ 부품 추가'),
       ),
     ),
@@ -10605,6 +10603,53 @@ function App() {
     a.download=`작업분석_${analysisName||videoName||'export'}.csv`; a.click();
   }
 
+  function uploadAnalysisToGas(){
+    if(!tasks.length) return;
+    if(!navigator.onLine){alert('오프라인 상태입니다.
+인터넷 연결 후 다시 시도하세요.');return;}
+    var url=getGasUrl();
+    if(!url){alert('GAS URL이 설정되지 않았습니다.
+설정 > Google Sheets URL을 먼저 입력하세요.');return;}
+    var grouped={};
+    tasks.forEach(function(t){
+      if(!t.name||!t.duration||t.duration<=0) return;
+      var pid=t.partId||'__none__';
+      if(!grouped[pid]) grouped[pid]={};
+      if(!grouped[pid][t.name]) grouped[pid][t.name]={total:0,n:0,worker:''};
+      grouped[pid][t.name].total+=t.duration;
+      grouped[pid][t.name].n++;
+      if(t.worker) grouped[pid][t.name].worker=t.worker;
+    });
+    var partsMap={};
+    parts.forEach(function(p){partsMap[p.id]=p.name;});
+    var today=new Date().toLocaleDateString('ko-KR');
+    var promises=[];var uploadCount=0;
+    Object.keys(grouped).forEach(function(pid){
+      Object.keys(grouped[pid]).forEach(function(taskName){
+        var entry=grouped[pid][taskName];
+        var st=parseFloat((entry.total/entry.n).toFixed(4));
+        uploadCount++;
+        promises.push(syncToGoogleSheet({
+          date:today,
+          partName:partsMap[pid]||'미지정',
+          taskName:taskName,
+          st:st,
+          worker:entry.worker,
+          cycleNo:entry.n,
+          source:'PIE_분析',
+        }));
+      });
+    });
+    if(!uploadCount){alert('업로드할 데이터가 없습니다.
+부품을 선택하고 작업 요소를 측정해주세요.');return;}
+    Promise.all(promises).then(function(results){
+      var failed=results.filter(function(r){return !r.ok;}).length;
+      if(failed===0) alert('구글 시트 저장 완료!
+'+uploadCount+'개 작업요소 업로드');
+      else alert(uploadCount+'개 중 '+(uploadCount-failed)+'개 성공, '+failed+'개 실패');
+    });
+  }
+
   // ── SOP: best cycle ──────────────────────────────────────────────────────
   function sopCalcBestCycle(){
     if(!tasks.length) return null;
@@ -11998,7 +12043,7 @@ function App() {
               React.createElement('div',{style:{width:8,height:8,borderRadius:'50%',background:v.typeColor}}),
               React.createElement('span',{className:'text-xs text-slate-500'},v.short),
             )),
-            React.createElement('button',{className:'btn btn-blue text-xs px-3 py-1 ml-auto',onClick:exportCSV,disabled:tasks.length===0},'↓ CSV'),
+            React.createElement('button',{className:'btn btn-green text-xs px-3 py-1 ml-auto',onClick:uploadAnalysisToGas,disabled:tasks.length===0},'💾 분析 내용 저장'),
             React.createElement('button',{
               className:'btn text-xs px-3 py-1',
               style:{background:tasks.length===0?'#334155':'#7c3aed',color:'#fff',
