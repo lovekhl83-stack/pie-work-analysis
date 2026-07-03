@@ -5320,6 +5320,11 @@ async function gasRefresh(){
     return (p.name||'').toLowerCase().includes(q)||(p.insertType||'').toLowerCase().includes(q);
   }).sort(function(a,b){return (a.name||'').localeCompare(b.name||'','ko');});
 
+  // 이중집계 감지 (전체작업 GAS 항목 + 개별 작업 혼재 여부)
+  var stGasTotal=selStData['전체작업']||null;
+  var stIndivKeys=Object.keys(selStData).filter(function(k){return k!=='전체작업';});
+  var stDoubleCount=!!(stGasTotal&&stIndivKeys.length>0);
+  var stCorrectTotal=stGasTotal?stGasTotal.st:Object.values(selStData).reduce(function(s,d){return s+d.st;},0);
   var PANEL={display:'flex',flexDirection:'column',flex:1,overflow:'hidden'};
   var HDR={display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 16px',background:'#1e293b',borderBottom:'1px solid #334155',flexShrink:0};
 
@@ -5527,8 +5532,9 @@ React.createElement('button',{className:'btn btn-green',style:{fontSize:12},
                   :React.createElement('div',null,
                     React.createElement('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12,gap:6,flexWrap:'wrap'}},
                       React.createElement('div',null,
-                        React.createElement('div',{style:{fontSize:11,color:'#94a3b8'}},Object.keys(selStData).length+'개 작업 | 모델 독립 누적 저장 (localStorage)'),
-                        React.createElement('div',{style:{fontSize:13,fontWeight:700,color:'#22c55e',marginTop:2}},'총 평균 ST: '+fmtS(Object.values(selStData).reduce(function(s,d){return s+d.st;},0))),
+                        React.createElement('div',{style:{fontSize:11,color:'#94a3b8'}},Object.keys(selStData).length+'개 항목 | 모델 독립 누적 저장 (localStorage)'),
+                        React.createElement('div',{style:{fontSize:13,fontWeight:700,color:stDoubleCount?'#f59e0b':'#22c55e',marginTop:2}},'총 ST: '+fmtS(stCorrectTotal)+(stDoubleCount?' ⚠':'')),
+                        stDoubleCount&&React.createElement('div',{style:{fontSize:10,color:'#fbbf24',marginTop:4,padding:'5px 8px',background:'rgba(234,179,8,0.08)',borderRadius:4,border:'1px solid rgba(234,179,8,0.3)',lineHeight:1.5}},'⚠ "전체작업"(GAS)과 개별 작업 ST 혼재. 총 ST는 전체작업 기준. 불필요한 항목을 삭제하세요.'),
                       ),
                       React.createElement('div',{style:{display:'flex',gap:6}},
                         React.createElement('button',{className:'btn btn-slate',style:{fontSize:11},onClick:exportStCsv},'📥 CSV'),
@@ -10604,50 +10610,69 @@ function App() {
   }
 
   function uploadAnalysisToGas(){
-    if(!tasks.length) return;
-    if(!navigator.onLine){alert('오프라인 상태입니다.
-인터넷 연결 후 다시 시도하세요.');return;}
+    // 모든 영상의 tasks 통합 (멀티영상 대응)
+    var allTasks=[];
+    if(videos&&videos.length>0){
+      videos.forEach(function(v){
+        var vt=(v.id===activeVideoId)?tasks:(v.tasks||[]);
+        allTasks=allTasks.concat(vt);
+      });
+    } else {
+      allTasks=tasks.slice();
+    }
+    if(!allTasks.length){alert('분析된 작업이 없습니다.');return;}
+    if(!navigator.onLine){alert('오프라인 상태입니다.\n인터넷 연결 후 다시 시도하세요.');return;}
     var url=getGasUrl();
-    if(!url){alert('GAS URL이 설정되지 않았습니다.
-설정 > Google Sheets URL을 먼저 입력하세요.');return;}
-    var grouped={};
-    tasks.forEach(function(t){
-      if(!t.name||!t.duration||t.duration<=0) return;
+    if(!url){alert('GAS URL이 설정되지 않았습니다.\n설정 > Google Sheets URL을 먼저 입력하세요.');return;}
+    // 부품별 그룹핑 (낭비 제외)
+    var partGroups={};
+    allTasks.forEach(function(t){
+      if(!t.duration||t.duration<=0) return;
+      if(t.type==='waste') return;
       var pid=t.partId||'__none__';
-      if(!grouped[pid]) grouped[pid]={};
-      if(!grouped[pid][t.name]) grouped[pid][t.name]={total:0,n:0,worker:''};
-      grouped[pid][t.name].total+=t.duration;
-      grouped[pid][t.name].n++;
-      if(t.worker) grouped[pid][t.name].worker=t.worker;
+      if(!partGroups[pid]) partGroups[pid]={total:0,cycles:new Set(),worker:''};
+      partGroups[pid].total+=t.duration;
+      partGroups[pid].cycles.add(t.cycle!=null?t.cycle:1);
+      if(t.worker) partGroups[pid].worker=t.worker;
     });
     var partsMap={};
     parts.forEach(function(p){partsMap[p.id]=p.name;});
+    // 중복 업로드 방지: fingerprint 비교
+    var sig=JSON.stringify(Object.keys(partGroups).sort().map(function(pid){
+      var e=partGroups[pid];
+      return {p:partsMap[pid]||'미지정',t:parseFloat(e.total.toFixed(4)),c:e.cycles.size||1};
+    }));
+    if(localStorage.getItem('pie_last_upload_sig')===sig){
+      if(!confirm('이 분析 내용은 이미 구글 시트에 저장한 것과 동일합니다.\n중복 저장하시겠습니까?')) return;
+    }
     var today=new Date().toLocaleDateString('ko-KR');
     var promises=[];var uploadCount=0;
-    Object.keys(grouped).forEach(function(pid){
-      Object.keys(grouped[pid]).forEach(function(taskName){
-        var entry=grouped[pid][taskName];
-        var st=parseFloat((entry.total/entry.n).toFixed(4));
-        uploadCount++;
-        promises.push(syncToGoogleSheet({
-          date:today,
-          partName:partsMap[pid]||'미지정',
-          taskName:taskName,
-          st:st,
-          worker:entry.worker,
-          cycleNo:entry.n,
-          source:'PIE_분析',
-        }));
-      });
+    Object.keys(partGroups).forEach(function(pid){
+      var entry=partGroups[pid];
+      var nCycles=entry.cycles.size||1;
+      var avgSec=parseFloat((entry.total/nCycles).toFixed(4));
+      uploadCount++;
+      promises.push(syncToGoogleSheet({
+        date:today,
+        partName:partsMap[pid]||'미지정',
+        taskName:'전체작업',
+        st:avgSec,
+        worker:entry.worker,
+        cycleNo:nCycles,
+        source:'PIE_분析',
+      }));
     });
-    if(!uploadCount){alert('업로드할 데이터가 없습니다.
-부품을 선택하고 작업 요소를 측정해주세요.');return;}
+    if(!uploadCount){alert('업로드할 데이터가 없습니다.\n부품을 선택하고 작업 요소를 측정해주세요.');return;}
     Promise.all(promises).then(function(results){
       var failed=results.filter(function(r){return !r.ok;}).length;
-      if(failed===0) alert('구글 시트 저장 완료!
-'+uploadCount+'개 작업요소 업로드');
-      else alert(uploadCount+'개 중 '+(uploadCount-failed)+'개 성공, '+failed+'개 실패');
+      if(failed===0){
+        localStorage.setItem('pie_last_upload_sig',sig);
+        alert('구글 시트 저장 완료!\n부품 '+uploadCount+'개 업로드 완료');
+      } else {
+        alert(uploadCount+'개 중 '+(uploadCount-failed)+'개 성공, '+failed+'개 실패');
+      }
     });
+  }
   }
 
   // ── SOP: best cycle ──────────────────────────────────────────────────────
