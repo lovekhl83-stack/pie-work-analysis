@@ -10145,14 +10145,14 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
 
         // 마킹 컨트롤
         React.createElement('div',{style:{padding:'8px 10px',background:C2.panel,borderTop:'1px solid '+C2.bd,flexShrink:0}},
-          React.createElement('div',{style:{marginBottom:8}},
-            React.createElement('div',{style:{fontSize:10,color:C2.sub,marginBottom:3,fontWeight:600,letterSpacing:.3}},'마킹할 부품'),
+          React.createElement('div',{style:{display:'flex',alignItems:'center',gap:7,marginBottom:6}},
+            React.createElement('span',{style:{fontSize:11,color:C2.sub,flexShrink:0,fontWeight:600}},'부품'),
             React.createElement('select',{
               value:selectedPartId||'',
               onChange:function(e){setSelectedPartId(e.target.value||null);},
-              style:{width:'100%',background:selectedPartId?'#1e293b':'rgba(92,51,0,0.3)',color:selectedPartId?'#e2e8f0':C2.amber,border:'2px solid '+(selectedPartId?'#334155':'rgba(245,158,11,0.7)'),borderRadius:6,padding:'7px 10px',fontSize:13,fontWeight:selectedPartId?400:700,cursor:'pointer',boxSizing:'border-box'}
+              style:{flex:1,background:selectedPartId?'rgba(34,197,94,0.08)':'rgba(92,51,0,0.2)',color:selectedPartId?'#86efac':C2.amber,border:'1px solid '+(selectedPartId?'rgba(34,197,94,0.35)':'rgba(245,158,11,0.55)'),borderRadius:5,padding:'5px 8px',fontSize:12,fontWeight:600,cursor:'pointer'}
             },
-              React.createElement('option',{value:''},'⚠ 부품을 선택하세요'),
+              React.createElement('option',{value:''},'⚠ 부품 선택'),
               parts.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'','ko');}).map(function(p){
                 return React.createElement('option',{key:p.id,value:p.id},p.name);
               })
@@ -10237,7 +10237,7 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
         ),
 
         // 마크 목록
-        React.createElement('div',{style:{flex:'0 0 auto',maxHeight:280,overflowY:'auto',borderTop:'1px solid '+C2.bd}},
+        React.createElement('div',{style:{flex:'0 0 auto',maxHeight:240,overflowY:'auto',borderTop:'1px solid '+C2.bd}},
           React.createElement('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'4px 10px',background:'#0f172a',borderBottom:'1px solid '+C2.bd}},
             React.createElement('span',{style:{fontSize:10,color:C2.sub}},(function(){var mc=activeTasks.reduce(function(m,t){return Math.max(m,t.cycle||1);},0);return activeTasks.length+'개 마크'+(mc>1?' · '+mc+'사이클':'');})()),
             activeTasks.length>0&&React.createElement('button',{
@@ -10249,28 +10249,25 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
             ?React.createElement('div',{style:{padding:'16px',textAlign:'center',color:C2.sub,fontSize:11}},'시작/종료 마크로 작업 구간을 기록하세요')
             :activeTasks.map(function(t,idx){
               var part=parts.find(function(p){return p.id===t.partId;});
-              return React.createElement('div',{key:t.id,style:{padding:'6px 10px 5px',borderBottom:'1px solid #1e293b',background:idx%2?'transparent':'rgba(255,255,255,0.02)'}},
-                React.createElement('div',{style:{display:'flex',alignItems:'center',gap:5,marginBottom:5}},
-                  React.createElement('span',{style:{color:C2.sub,flexShrink:0,minWidth:16,fontSize:10,textAlign:'right'}},idx+1),
-                  React.createElement('span',{style:{color:'#60a5fa',flexShrink:0,fontSize:10,minWidth:24,textAlign:'center',background:'rgba(59,130,246,0.15)',borderRadius:3,padding:'0 3px',fontWeight:700}},'C'+(t.cycle||1)),
-                  React.createElement('span',{style:{color:'#4ade80',flexShrink:0,fontSize:12,fontWeight:700}},fmtD(t.duration)),
-                  React.createElement('span',{style:{flex:1}}),
-                  React.createElement('span',{style:{color:'#64748b',fontSize:10,flexShrink:0}},t.startTime.toFixed(1)+'~'+t.endTime.toFixed(1)+'s'),
-                  React.createElement('button',{
-                    onClick:function(){deleteMark(t.id);},
-                    style:{background:'rgba(239,68,68,0.12)',border:'1px solid rgba(239,68,68,0.35)',color:'#f87171',cursor:'pointer',padding:'2px 7px',fontSize:11,borderRadius:4,flexShrink:0,fontWeight:700,marginLeft:4}
-                  },'✕'),
-                ),
+              return React.createElement('div',{key:t.id,style:{display:'flex',alignItems:'center',gap:5,padding:'5px 8px',borderBottom:'1px solid #1e293b',background:idx%2?'transparent':'rgba(255,255,255,0.02)'}},
+                React.createElement('span',{style:{color:'#475569',flexShrink:0,minWidth:16,fontSize:10,textAlign:'right'}},idx+1),
+                React.createElement('span',{style:{color:'#60a5fa',flexShrink:0,fontSize:10,background:'rgba(59,130,246,0.15)',borderRadius:3,padding:'0 3px',fontWeight:700}},'C'+(t.cycle||1)),
+                React.createElement('span',{style:{color:'#4ade80',flexShrink:0,fontSize:11,fontWeight:700,minWidth:48}},fmtD(t.duration)),
                 React.createElement('select',{
                   value:t.partId||'',
                   onChange:function(e){updateMarkPart(t.id,e.target.value||null);},
-                  style:{width:'100%',background:t.partId?'#1e293b':'rgba(92,51,0,0.25)',color:t.partId?'#e2e8f0':C2.amber,border:'1px solid '+(t.partId?'#334155':'rgba(245,158,11,0.6)'),borderRadius:5,padding:'5px 8px',fontSize:13,cursor:'pointer',boxSizing:'border-box'}
+                  style:{flex:1,background:t.partId?'rgba(34,197,94,0.1)':'rgba(92,51,0,0.2)',color:t.partId?'#86efac':C2.amber,border:'1px solid '+(t.partId?'rgba(34,197,94,0.3)':'rgba(245,158,11,0.5)'),borderRadius:4,padding:'4px 6px',fontSize:12,fontWeight:600,cursor:'pointer'}
                 },
-                  React.createElement('option',{value:''},'⚠ 부품 선택 필요'),
+                  React.createElement('option',{value:''},'⚠ 미선택'),
                   parts.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'','ko');}).map(function(p){
                     return React.createElement('option',{key:p.id,value:p.id},p.name);
                   })
                 ),
+                React.createElement('span',{style:{color:'#475569',fontSize:9,flexShrink:0,minWidth:58,textAlign:'right'}},t.startTime.toFixed(1)+'~'+t.endTime.toFixed(1)+'s'),
+                React.createElement('button',{
+                  onClick:function(){deleteMark(t.id);},
+                  style:{background:'rgba(239,68,68,0.12)',border:'1px solid rgba(239,68,68,0.3)',color:'#f87171',cursor:'pointer',padding:'2px 6px',fontSize:10,borderRadius:3,flexShrink:0,fontWeight:700}
+                },'✕'),
               );
             })
         ),
