@@ -9937,6 +9937,24 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
       return Object.assign({},p,{[activeWorkerId]:(p[activeWorkerId]||[]).filter(function(t){return t.id!==taskId;})});
     });
   }
+  function deleteLastMark(){
+    if(!activeWorkerId) return;
+    var wt=workerTasks[activeWorkerId]||[];
+    if(wt.length===0) return;
+    var sorted=wt.slice().sort(function(a,b){return a.startTime-b.startTime;});
+    var last=sorted[sorted.length-1];
+    var prev=sorted.length>=2?sorted[sorted.length-2]:null;
+    var seekTo=prev?prev.endTime:0;
+    if(videoRef.current){
+      videoRef.current.currentTime=seekTo;
+      videoRef.current.pause();
+      setLineVideoCurrentTime(seekTo);
+    }
+    setPending(null);
+    setWorkerTasks(function(p){
+      return Object.assign({},p,{[activeWorkerId]:(p[activeWorkerId]||[]).filter(function(t){return t.id!==last.id;})});
+    });
+  }
   function updateMarkPart(taskId,partId){
     if(!activeWorkerId) return;
     setWorkerTasks(function(p){
@@ -10232,6 +10250,17 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
                 borderRadius:8,cursor:'pointer',fontSize:14,fontWeight:700,
                 opacity:pending===null?0.4:1}
             },'⏹ 종료 마크 (E)'),
+            React.createElement('button',{
+              onClick:deleteLastMark,
+              disabled:!activeVideo||!activeWorkerId||activeTasks.length===0,
+              title:'마지막 마크 삭제 후 이전 마크 종료 위치로 이동',
+              style:{padding:'11px 10px',flexShrink:0,
+                background:activeTasks.length>0?'rgba(120,53,15,0.7)':'rgba(30,41,59,0.6)',
+                color:activeTasks.length>0?'#fbbf24':C2.sub,
+                border:'2px solid '+(activeTasks.length>0?'#92400e':C2.bd),
+                borderRadius:8,cursor:'pointer',fontSize:11,fontWeight:700,
+                opacity:(!activeVideo||!activeWorkerId||activeTasks.length===0)?0.4:1}
+            },'↩ 마지막삭제'),
           ),
           pending!==null&&!selectedPartId&&React.createElement('div',{style:{fontSize:10,color:C2.amber,marginTop:3}},'⚠ 종료 전에 부품을 선택하세요'),
         ),
