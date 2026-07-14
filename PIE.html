@@ -10236,113 +10236,73 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
           pending!==null&&!selectedPartId&&React.createElement('div',{style:{fontSize:10,color:C2.amber,marginTop:3}},'⚠ 종료 전에 부품을 선택하세요'),
         ),
 
-        // 마크 목록
-        React.createElement('div',{style:{flex:'0 0 auto',maxHeight:240,overflowY:'auto',borderTop:'1px solid '+C2.bd}},
-          React.createElement('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'4px 10px',background:'#0f172a',borderBottom:'1px solid '+C2.bd}},
-            React.createElement('span',{style:{fontSize:10,color:C2.sub}},(function(){var mc=activeTasks.reduce(function(m,t){return Math.max(m,t.cycle||1);},0);return activeTasks.length+'개 마크'+(mc>1?' · '+mc+'사이클':'');})()),
-            activeTasks.length>0&&React.createElement('button',{
-              onClick:clearWorkerMarks,
-              style:{fontSize:9,color:'#fca5a5',background:'transparent',border:'1px solid rgba(239,68,68,0.3)',borderRadius:3,cursor:'pointer',padding:'1px 6px'}
-            },'전체 삭제'),
-          ),
-          activeTasks.length===0
-            ?React.createElement('div',{style:{padding:'16px',textAlign:'center',color:C2.sub,fontSize:11}},'시작/종료 마크로 작업 구간을 기록하세요')
-            :activeTasks.map(function(t,idx){
-              var part=parts.find(function(p){return p.id===t.partId;});
-              return React.createElement('div',{key:t.id,style:{display:'flex',alignItems:'center',gap:5,padding:'5px 8px',borderBottom:'1px solid #1e293b',background:idx%2?'transparent':'rgba(255,255,255,0.02)'}},
-                React.createElement('span',{style:{color:'#475569',flexShrink:0,minWidth:16,fontSize:10,textAlign:'right'}},idx+1),
-                React.createElement('span',{style:{color:'#60a5fa',flexShrink:0,fontSize:10,background:'rgba(59,130,246,0.15)',borderRadius:3,padding:'0 3px',fontWeight:700}},'C'+(t.cycle||1)),
-                React.createElement('span',{style:{color:'#4ade80',flexShrink:0,fontSize:11,fontWeight:700,minWidth:48}},fmtD(t.duration)),
-                React.createElement('select',{
-                  value:t.partId||'',
-                  onChange:function(e){updateMarkPart(t.id,e.target.value||null);},
-                  style:{flex:1,background:t.partId?'rgba(34,197,94,0.1)':'rgba(92,51,0,0.2)',color:t.partId?'#86efac':C2.amber,border:'1px solid '+(t.partId?'rgba(34,197,94,0.3)':'rgba(245,158,11,0.5)'),borderRadius:4,padding:'4px 6px',fontSize:12,fontWeight:600,cursor:'pointer'}
-                },
-                  React.createElement('option',{value:''},'⚠ 미선택'),
-                  parts.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'','ko');}).map(function(p){
-                    return React.createElement('option',{key:p.id,value:p.id},p.name);
-                  })
-                ),
-                React.createElement('span',{style:{color:'#475569',fontSize:9,flexShrink:0,minWidth:58,textAlign:'right'}},t.startTime.toFixed(1)+'~'+t.endTime.toFixed(1)+'s'),
-                React.createElement('button',{
-                  onClick:function(){deleteMark(t.id);},
-                  style:{background:'rgba(239,68,68,0.12)',border:'1px solid rgba(239,68,68,0.3)',color:'#f87171',cursor:'pointer',padding:'2px 6px',fontSize:10,borderRadius:3,flexShrink:0,fontWeight:700}
-                },'✕'),
-              );
-            })
-        ),
       ),
 
-      // ── 우: 결과 매트릭스 ──
-      React.createElement('div',{style:{display:'flex',flexDirection:'column',flex:'0 0 45%',overflow:'hidden'}},
-        React.createElement('div',{style:{padding:'6px 12px',background:C2.panel,borderBottom:'1px solid '+C2.bd,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between'}},
-          React.createElement('span',{style:{fontSize:12,fontWeight:700,color:'#fff'}},'📋 부품별 평균 작업시간'),
-          taktTime>0&&React.createElement('span',{style:{fontSize:10,color:C2.sub}},'택트 '+taktTime+'s 기준'),
-        ),
-        resultParts.length===0
-          ?React.createElement('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flex:1,color:C2.sub,fontSize:12,gap:8}},
-            React.createElement('div',{style:{fontSize:28}},'📊'),
-            React.createElement('div',null,'마크 완료 후 결과가 표시됩니다'),
-            React.createElement('div',{style:{fontSize:10,color:'#334155',textAlign:'center',maxWidth:200,lineHeight:1.5}},'각 작업자 탭에서 부품별 시작/종료 마크를 완료하세요'),
+      // ── 우: 마크 테이블 ──
+      React.createElement('div',{style:{flex:'0 0 48%',display:'flex',flexDirection:'column',gap:6,minWidth:0}},
+        React.createElement('div',{style:{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',background:'rgba(255,255,255,0.02)',border:'1px solid #1e293b',borderRadius:8,minHeight:0}},
+          React.createElement('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 10px',borderBottom:'1px solid #1e293b',flexShrink:0}},
+            React.createElement('span',{style:{color:'#94a3b8',fontSize:12,fontWeight:700}},'마크 목록 ',React.createElement('span',{style:{color:'#3b82f6',fontSize:11}},'('+activeTasks.length+')')),
+            React.createElement('button',{onClick:clearWorkerMarks,style:{background:'rgba(239,68,68,0.12)',border:'1px solid rgba(239,68,68,0.3)',color:'#f87171',cursor:'pointer',padding:'2px 8px',fontSize:10,borderRadius:4,fontWeight:700}},'전체삭제')
+          ),
+          React.createElement('div',{style:{display:'grid',gridTemplateColumns:'18px 1fr 36px 36px 46px 46px 18px',gap:2,padding:'3px 8px',borderBottom:'1px solid #1e293b',background:'rgba(0,0,0,0.2)',flexShrink:0}},
+            React.createElement('span',{style:{color:'#475569',fontSize:9,textAlign:'center'}},'#'),
+            React.createElement('span',{style:{color:'#475569',fontSize:9}},'부품명'),
+            React.createElement('span',{style:{color:'#475569',fontSize:9,textAlign:'center'}},'사이클'),
+            React.createElement('span',{style:{color:'#475569',fontSize:9,textAlign:'center'}},'구분'),
+            React.createElement('span',{style:{color:'#475569',fontSize:9,textAlign:'center'}},'시작'),
+            React.createElement('span',{style:{color:'#475569',fontSize:9,textAlign:'center'}},'종료'),
+            React.createElement('span',{style:{color:'#475569',fontSize:9}})
+          ),
+          React.createElement('div',{style:{flex:1,overflowY:'auto'}},
+            activeTasks.length===0
+              ?React.createElement('div',{style:{color:'#475569',fontSize:11,textAlign:'center',padding:'20px 0'}},'마크 없음')
+              :activeTasks.map(function(t,mIdx){
+                var fmtT=function(s){return Math.floor(s/60).toString().padStart(2,'0')+':'+((s%60)<10?'0':'')+(s%60).toFixed(1);};
+                return React.createElement('div',{key:t.id,style:{display:'grid',gridTemplateColumns:'18px 1fr 36px 36px 46px 46px 18px',gap:2,padding:'3px 8px',borderBottom:'1px solid rgba(30,41,59,0.5)',background:mIdx%2?'transparent':'rgba(255,255,255,0.02)',alignItems:'center'}},
+                  React.createElement('span',{style:{color:'#475569',fontSize:9,textAlign:'center',flexShrink:0}},mIdx+1),
+                  React.createElement('select',{value:t.partId||'',onChange:function(e){updateMarkPart(t.id,e.target.value||null);},style:{width:'100%',background:'transparent',color:t.partId?'#86efac':C2.amber,border:'none',borderBottom:'1px solid '+(t.partId?'rgba(34,197,94,0.3)':'rgba(245,158,11,0.5)'),padding:'1px 2px',fontSize:10,fontWeight:600,cursor:'pointer',outline:'none'}},
+                    React.createElement('option',{value:''},'미선택'),
+                    parts.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'','ko');}).map(function(p){return React.createElement('option',{key:p.id,value:p.id},p.name);})
+                  ),
+                  React.createElement('span',{style:{color:'#60a5fa',fontSize:9,textAlign:'center',fontWeight:700,flexShrink:0}},'C'+(t.cycle||1)),
+                  React.createElement('span',{style:{color:t.hand==='RH'?'#fb923c':'#34d399',fontSize:9,textAlign:'center',fontWeight:700,flexShrink:0}},t.hand||'LH'),
+                  React.createElement('span',{style:{color:'#94a3b8',fontSize:9,textAlign:'center',fontFamily:'monospace',flexShrink:0}},fmtT(t.startTime)),
+                  React.createElement('span',{style:{color:'#94a3b8',fontSize:9,textAlign:'center',fontFamily:'monospace',flexShrink:0}},fmtT(t.endTime)),
+                  React.createElement('button',{onClick:function(){deleteMark(t.id);},style:{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:11,padding:0,textAlign:'center',lineHeight:1,flexShrink:0}},'x')
+                );
+              })
           )
-          :React.createElement('div',{style:{overflow:'auto',flex:1}},
-            React.createElement('table',{style:{width:'100%',borderCollapse:'collapse',fontSize:11}},
+        ),
+        React.createElement('div',{style:{flex:'0 0 auto',maxHeight:185,display:'flex',flexDirection:'column',overflow:'hidden',background:'rgba(255,255,255,0.02)',border:'1px solid #1e293b',borderRadius:8}},
+          React.createElement('div',{style:{padding:'5px 10px',borderBottom:'1px solid #1e293b',flexShrink:0,display:'flex',justifyContent:'space-between',alignItems:'center'}},
+            React.createElement('span',{style:{color:'#94a3b8',fontSize:10,fontWeight:700}},'부품별 평균'),
+            taktTime>0&&React.createElement('span',{style:{color:'#60a5fa',fontSize:9}},'TT: '+taktTime+'s')
+          ),
+          React.createElement('div',{style:{flex:1,overflowY:'auto',overflowX:'auto'}},
+            React.createElement('table',{style:{width:'100%',borderCollapse:'collapse',fontSize:9}},
               React.createElement('thead',null,
-                React.createElement('tr',{style:{background:'#1e293b',position:'sticky',top:0,zIndex:1}},
-                  React.createElement('th',{style:{padding:'6px 10px',textAlign:'left',color:C2.sub,fontWeight:600,borderBottom:'1px solid '+C2.bd,minWidth:80}},'부품'),
-                  workers.map(function(w){
-                    return React.createElement('th',{key:w.id,style:{padding:'6px 8px',textAlign:'right',color:C2.sub,fontWeight:600,borderBottom:'1px solid '+C2.bd,minWidth:75}},w.name);
-                  }),
+                React.createElement('tr',null,
+                  React.createElement('th',{style:{color:'#475569',padding:'2px 4px',textAlign:'left',fontWeight:600,position:'sticky',top:0,background:'#0f172a',whiteSpace:'nowrap'}},'부품'),
+                  workers.map(function(w){return React.createElement('th',{key:w.id,style:{color:'#475569',padding:'2px 4px',textAlign:'center',fontWeight:600,position:'sticky',top:0,background:'#0f172a',minWidth:30,whiteSpace:'nowrap'}},w.name||(w.id.slice(-2)));})
                 )
               ),
               React.createElement('tbody',null,
-                resultParts.map(function(part){
-                  return React.createElement('tr',{key:part.id,style:{borderBottom:'1px solid #0f172a'}},
-                    React.createElement('td',{style:{padding:'5px 10px',color:'#e2e8f0',fontWeight:500}},part.name),
-                    workers.map(function(w){
-                      var cell=lineResults.matrix[part.id]&&lineResults.matrix[part.id][w.id];
-                      return React.createElement('td',{key:w.id,style:{padding:'5px 8px',textAlign:'right'}},
-                        cell
-                          ?React.createElement('div',{style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:1}},
-                            React.createElement('span',{style:{color:'#22c55e',fontWeight:600}},fmtD(cell.avg)),
-                            cell.count>1&&React.createElement('span',{style:{fontSize:9,color:C2.sub}},cell.count+'회 평균')
-                          )
-                          :React.createElement('span',{style:{color:'#1e293b'}},'-')
-                      );
-                    }),
+                resultParts.map(function(p){
+                  return React.createElement('tr',{key:p.id,style:{borderBottom:'1px solid rgba(30,41,59,0.5)'}},
+                    React.createElement('td',{style:{color:'#cbd5e1',padding:'2px 4px',whiteSpace:'nowrap',fontWeight:600}},p.name),
+                    workers.map(function(w){var v=lineResults[w.id]&&lineResults[w.id][p.id];return React.createElement('td',{key:w.id,style:{color:v?'#4ade80':'#475569',padding:'2px 4px',textAlign:'center'}},v?fmtD(v):'-');})
                   );
                 }),
-                // 합계 행
-                React.createElement('tr',{style:{background:'#1e293b',borderTop:'2px solid '+C2.bd}},
-                  React.createElement('td',{style:{padding:'6px 10px',color:'#fff',fontWeight:700}},'합계'),
-                  workers.map(function(w){
-                    var total=lineResults.workerTotals[w.id]||0;
-                    var over=taktTime>0&&total>taktTime;
-                    return React.createElement('td',{key:w.id,style:{padding:'6px 8px',textAlign:'right',fontWeight:700,color:over?C2.red:'#22c55e'}},
-                      total>0?fmtD(total):'-'
-                    );
-                  }),
-                ),
-                // 효율 행
-                taktTime>0&&React.createElement('tr',{style:{background:'rgba(59,130,246,0.05)'}},
-                  React.createElement('td',{style:{padding:'4px 10px',color:C2.sub,fontSize:10}},'택트 대비'),
-                  workers.map(function(w){
-                    var total=lineResults.workerTotals[w.id]||0;
-                    var eff=taktTime>0&&total>0?total/taktTime*100:0;
-                    var cl=eff>100?C2.red:eff>80?'#22c55e':C2.sub;
-                    return React.createElement('td',{key:w.id,style:{padding:'4px 8px',textAlign:'right',fontSize:11,fontWeight:600,color:cl}},
-                      total>0?eff.toFixed(0)+'%':'-'
-                    );
-                  }),
-                ),
-              ),
+                React.createElement('tr',{style:{borderTop:'1px solid #334155'}},
+                  React.createElement('td',{style:{color:'#60a5fa',padding:'2px 4px',fontWeight:700}},'합계'),
+                  workers.map(function(w){var tot=resultParts.reduce(function(s,p){return s+((lineResults[w.id]&&lineResults[w.id][p.id])||0);},0);return React.createElement('td',{key:w.id,style:{color:taktTime>0?(tot<=taktTime?'#4ade80':'#f87171'):'#60a5fa',padding:'2px 4px',textAlign:'center',fontWeight:700}},tot>0?fmtD(tot):'-');})
+                )
+              )
             )
-          ),
-        React.createElement('div',{style:{padding:'8px 12px',fontSize:10,color:'#334155',borderTop:'1px solid '+C2.bd,flexShrink:0,lineHeight:1.5}},
-          '※ 작업배분/배치실험 탭에서 라인 밸런스 야마즈미 차트를 확인하세요.',
-          React.createElement('br',null),
-          '영상은 세션 종료 시 재선택이 필요합니다. 마크 데이터는 자동 저장됩니다.',
+          )
         ),
+        React.createElement('div',{style:{color:'#334155',fontSize:9,textAlign:'center',padding:'3px 0'}},'마크 데이터는 자동 저장됩니다.')
       ),
     ),
   );
