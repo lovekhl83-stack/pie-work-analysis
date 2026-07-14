@@ -9899,8 +9899,8 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
   }
   function markStart(){
     if(!videoRef.current||!activeWorkerId) return;
-    videoRef.current.pause();
     setPending(videoRef.current.currentTime);
+    var _mp=videoRef.current.play();if(_mp&&_mp.catch)_mp.catch(function(){});
   }
   function markEnd(){
     if(!videoRef.current||!activeWorkerId||pending===null) return;
