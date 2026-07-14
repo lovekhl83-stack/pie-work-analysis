@@ -9789,9 +9789,9 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
   function loadW(){try{return JSON.parse(localStorage.getItem(LS_W)||'[]');}catch{return[];}}
   function loadT(){try{return JSON.parse(localStorage.getItem(LS_T)||'{}');}catch{return{};}}
 
-  var _w=useState(loadW); var workers=_w[0],setWorkers=_w[1];
-  var _wt=useState(loadT); var workerTasks=_wt[0],setWorkerTasks=_wt[1];
-  var _aw=useState(function(){var ws=loadW();return ws.length>0?ws[0].id:null;});
+  var _w=useState([]); var workers=_w[0],setWorkers=_w[1];
+  var _wt=useState({}); var workerTasks=_wt[0],setWorkerTasks=_wt[1];
+  var _aw=useState(null);
   var activeWorkerId=_aw[0],setActiveWorkerId=_aw[1];
   var _wv=useState({}); var workerVideos=_wv[0],setWorkerVideos=_wv[1];
   var _pd=useState(null); var pending=_pd[0],setPending=_pd[1];
@@ -9891,8 +9891,11 @@ function LineAnalysisPanel({parts,taktTime,onDataChange,snapshotRef,projectToLoa
   }
   function handleVideoFile(file){
     if(!file||!activeWorkerId) return;
+    if((workerTasks[activeWorkerId]||[]).length>0&&!confirm('이 작업자의 마크 데이터가 삭제됩니다. 계속하시겠습니까?')) return;
     var src=URL.createObjectURL(file);
     setWorkerVideos(function(p){return Object.assign({},p,{[activeWorkerId]:{name:file.name,src:src}});});
+    setWorkerTasks(function(p){return Object.assign({},p,{[activeWorkerId]:[]});});
+    setPending(null);
     window.setTimeout(function(){
       if(videoRef.current){videoRef.current.src=src;videoRef.current.load();}
     },50);
