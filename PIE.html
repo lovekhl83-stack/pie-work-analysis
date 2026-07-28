@@ -6059,7 +6059,7 @@ function PartsManager({parts,onPartsChange}){
   var _rfx=useState('idle'); var refreshStatus=_rfx[0],setRefreshStatus=_rfx[1];
   async function gasRefresh(){
     var url=getGasUrl();
-    if(!url){alert(_m('GAS URL이 설정되지 않았습니다.\n설정 > Google Sheets URL을 먼저 입력하세요.'));return;}
+    if(!url){alert(_m('구글 시트 주소가 아직 등록되지 않았습니다.\n\n상단 ☰ 메뉴 > ⚙️ 설정 > 📊 Google Sheets 연동 에\n웹 앱 주소(/exec 로 끝나는 주소)를 입력하고\n저장을 누른 뒤 다시 시도하세요.'));return;}
     if(!navigator.onLine){alert(_m('오프라인 상태입니다.\n인터넷 연결 후 다시 시도하세요.'));return;}
     setRefreshStatus('loading');
     var result=await fetchFromGoogleSheet();
