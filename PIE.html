@@ -1396,8 +1396,9 @@ const SPEEDS = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 4];
 const WHEEL_PRESETS = [{l:'30ms',v:.030},{l:'50ms',v:.050},{l:'67ms',v:.067},{l:'100ms',v:.100}];
 
 // Google Apps Script 웹 앱 URL 기본값 (빈 문자열 = 미설정)
-// 실제 값은 설정 화면에서 입력 → localStorage 'pie_gas_url' 에 저장
-const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbwq3jaaCOlbEeleE8pCRqZKKNHSqE-a6gL-1rligZcDPFSFhAuyAM5LGzWFGd5cH2tr6Q/exec';
+// 이 저장소는 public이므로 실제 주소를 코드에 넣지 않는다 (아무나 시트에 쓰기 가능해짐).
+// 각 PC에서 설정 화면에 한 번 입력 → localStorage 'pie_gas_url' 에 저장된다.
+const GAS_URL_DEFAULT = '';
 
 
 /* ── api.js ── */
@@ -1407,9 +1408,14 @@ const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbwq3jaaCOlbEele
  *
  * [GAS 서버 측 설정 방법]
  * 1. 구글 스프레드시트 생성 후 확장 프로그램 > Apps Script 실행
- * 2. 아래 doPost 코드 붙여넣기 후 배포 > 웹 앱으로 배포
+ * 2. 아래 doPost + doGet 코드를 **둘 다** 붙여넣기 후 배포 > 웹 앱으로 배포
  * 3. 실행 계정: 본인 / 액세스: 모든 사용자(익명)
  * 4. 발급된 웹 앱 URL을 PIE 설정 > Google Sheets URL 항목에 입력
+ *
+ * ⚠ 코드를 고친 뒤에는 반드시 **배포 > 배포 관리 > 새 버전 > 배포**를 해야 /exec 주소에 반영된다.
+ *    저장만 하면 기존 배포는 옛 코드를 계속 실행한다.
+ * ⚠ doPost = PIE→시트 저장, doGet = 시트→PIE 가져오기(부품관리 🔄 동기화).
+ *    doGet이 없으면 동기화 시 "다음 스크립트 함수(doGet)를 찾을 수 없습니다" 오류가 난다.
  *
  * ── GAS 서버 코드 (구글 Apps Script 붙여넣기용) ──────────────────
  * function doPost(e) {
@@ -1435,6 +1441,29 @@ const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbwq3jaaCOlbEele
  *
  *   return ContentService
  *     .createTextOutput(JSON.stringify({ result: 'ok' }))
+ *     .setMimeType(ContentService.MimeType.JSON);
+ * }
+ *
+ * function doGet(e) {
+ *   var ss     = SpreadsheetApp.getActiveSpreadsheet();
+ *   var sheet  = ss.getSheetByName('ST누적') || ss.getActiveSheet();
+ *   var values = sheet.getDataRange().getValues();
+ *   var rows   = [];
+ *   if (values.length > 1) {
+ *     var head = values[0];
+ *     for (var i = 1; i < values.length; i++) {
+ *       var obj = {};
+ *       for (var c = 0; c < head.length; c++) {
+ *         var v = values[i][c];
+ *         obj[head[c]] = (v instanceof Date)
+ *           ? Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss')
+ *           : v;
+ *       }
+ *       rows.push(obj);
+ *     }
+ *   }
+ *   return ContentService
+ *     .createTextOutput(JSON.stringify({ rows: rows }))
  *     .setMimeType(ContentService.MimeType.JSON);
  * }
  * ──────────────────────────────────────────────────────────────────
@@ -1508,9 +1537,27 @@ async function fetchFromGoogleSheet(){
   if(!url) return{ok:false,reason:'GAS URL이 설정되지 않았습니다.'};
   try{
     const res=await fetch(url,{method:'GET',signal:AbortSignal.timeout(15000)});
-    const json=await res.json();
+    const text=await res.text();
+    // GAS는 오류를 JSON이 아니라 HTML 안내 페이지로 돌려준다 → 원인을 그대로 읽어서 알려준다
+    if(text.trim().startsWith('<')){
+      if(text.includes('doGet'))
+        return{ok:false,reason:'구글 스크립트에 doGet 함수가 없습니다.\n\nApps Script에 doGet을 추가한 뒤\n배포 > 배포 관리 > 새 버전 > 배포 를 해주세요.\n(코드 저장만으로는 반영되지 않습니다)'};
+      const m=text.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      return{ok:false,reason:'구글이 오류 페이지를 반환했습니다:\n'+m.slice(0,200)};
+    }
+    const json=JSON.parse(text);
     return{ok:true,rows:json.rows||[]};
   }catch(err){
+    // GAS가 오류를 낼 때는 CORS 헤더 없는 HTML 안내 페이지를 돌려주므로
+    // 브라우저에서는 내용을 읽지 못하고 'Failed to fetch'만 잡힌다 → 원인 후보를 안내한다
+    if(err.name==='TimeoutError'||err.name==='AbortError')
+      return{ok:false,reason:'응답이 15초 안에 오지 않았습니다. 네트워크 상태를 확인하세요.'};
+    if(/fetch/i.test(err.message||''))
+      return{ok:false,reason:'구글 스크립트에서 데이터를 읽지 못했습니다.\n\n다음을 확인하세요:\n'+
+        '① Apps Script에 doGet 함수가 있는지 (없으면 가져오기 불가 — 저장은 됩니다)\n'+
+        '② 코드 수정 후 배포 > 배포 관리 > 새 버전 > 배포 를 했는지\n'+
+        '③ 배포 설정의 액세스 권한이 "모든 사용자"인지\n'+
+        '④ 설정에 입력한 주소가 /exec 로 끝나는지'};
     return{ok:false,reason:err.message};
   }
 }
@@ -2429,7 +2476,9 @@ function SettingsModal({lang,setLang,onClose}){
             color:navigator.onLine?'#4ade80':'#64748b'}},
             navigator.onLine?'🌐 온라인':'📴 오프라인')),
         React.createElement('div',{style:{fontSize:11,color:'#475569',marginBottom:8,lineHeight:1.6}},
-          'GAS 웹 앱 URL을 입력하면 부품 ST 저장 시 자동으로 스프레드시트에 누적됩니다.'),
+          'GAS 웹 앱 URL을 입력하면 부품 ST 저장 시 자동으로 스프레드시트에 누적됩니다.',
+          React.createElement('br'),
+          'Apps Script에 ',React.createElement('b',null,'doPost + doGet'),' 두 함수가 모두 있어야 저장·가져오기가 됩니다.'),
         React.createElement('div',{style:{display:'flex',gap:6}},
           React.createElement('input',{
             type:'text',
